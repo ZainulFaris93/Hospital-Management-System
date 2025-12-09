@@ -1,0 +1,184 @@
+{% extends 'patient_navbar.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f5f7fa;
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+    }
+
+    /* --- Hero Section --- */
+    .hero {
+        height: 500px;
+        background: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url("{% static 'images/home_banner.webp' %}");
+        background-size: cover;
+        background-position: center top;
+        background-repeat: no-repeat;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: white;
+        padding: 20px;
+        position: relative;
+    }
+    @media (max-width: 768px) {
+        .hero {
+            max-height: 300px;
+        }
+    }
+    .hero h1 {
+        font-size: 3rem;
+        font-weight: 700;
+    }
+    .hero p {
+        font-size: 1.15rem;
+        max-width: 700px;
+        margin: 12px auto 25px;
+        opacity: 0.9;
+    }
+    .btn-main {
+        padding: 12px 28px;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        margin-right: 10px;
+    }
+
+    /* --- Feature Cards --- */
+    .feature-card {
+        padding: 30px;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+        transition: .3s;
+    }
+    .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 18px 40px rgba(17,24,39,0.1);
+    }
+    .feature-card i {
+        font-size: 42px;
+        color: #008474;
+        margin-bottom: 15px;
+    }
+
+    /* --- Section Titles --- */
+    .section-title {
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 14px;
+        color: #003b4f;
+    }
+
+    /* Scroll animations */
+    .animate-on-scroll {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity .6s ease-out, transform .6s ease-out;
+    }
+    .animate-on-scroll.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .parallax{
+        background: url("{% static 'images/home_bg.jpg' %}") center/cover fixed;
+        padding: 110px 0; 
+        text-align:center; 
+        color:white;
+    }
+</style>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="animate-on-scroll" data-animate="animate__fadeInUp">
+        <h1>Hello, {{ request.user.first_name }}</h1>
+        <p>Your personal health space — manage appointments, view history, and access care quickly & easily.</p>
+
+        <a href="{% url 'patient_book_appointment' %}" class="btn btn-success btn-main mb-2">Book Appointment</a>
+        <a href="{% url 'patient_appointment_history' %}" class="btn btn-outline-light btn-main">My Appointments</a>
+    </div>
+</section>
+
+<!-- Features -->
+<section id="features" class="container py-5">
+    <h2 class="section-title animate-on-scroll" data-animate="animate__fadeInUp">Your Dashboard at a Glance</h2>
+    <p class="text-center text-muted mb-5 animate-on-scroll" data-animate="animate__fadeInUp">
+        Simple tools designed to help you manage your healthcare effortlessly.
+    </p>
+
+    <div class="row">
+        <div class="col-md-4 mb-4 animate-on-scroll" data-animate="animate__fadeInLeft">
+            <div class="feature-card text-center">
+                <i class="fa fa-calendar-check-o"></i>
+                <h5 class="mt-3">Easy Booking</h5>
+                <p class="text-muted">Schedule appointments with top specialists in just a few clicks.</p>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4 animate-on-scroll" data-animate="animate__fadeInUp">
+            <div class="feature-card text-center">
+                <i class="fa fa-history"></i>
+                <h5 class="mt-3">Appointment History</h5>
+                <p class="text-muted">View past and upcoming appointments anytime.</p>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4 animate-on-scroll" data-animate="animate__fadeInRight">
+            <div class="feature-card text-center">
+                <i class="fa fa-user-circle"></i>
+                <h5 class="mt-3">Manage Profile</h5>
+                <p class="text-muted">Keep your personal details up-to-date with ease.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Parallax Info -->
+<section class="parallax animate-on-scroll" data-animate="animate__fadeInUp" >
+    <div class="container">
+        <h2>Your Health. Our Priority.</h2>
+        <p class="lead">Seamless experience built for comfort, convenience, and clarity.</p>
+    </div>
+</section>
+
+<!-- Contact Quick Links -->
+<section class="container py-5">
+    <div class="text-center mb-3 animate-on-scroll" data-animate="animate__fadeInUp">
+        <h2 class="section-title">Need Help?</h2>
+        <p class="text-muted">Reach out anytime for assistance or queries regarding your healthcare journey.</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6 animate-on-scroll" data-animate="animate__fadeInUp">
+            <div class="feature-card p-4">
+                <h5><i class="fa fa-phone"></i> Contact Support</h5>
+                <p class="text-muted mb-2">+91 98765 43210</p>
+                <p class="text-muted">support@hospital.com</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Basic Scroll Animation Script -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add("visible");
+                entry.target.classList.add("animate__animated");
+                entry.target.classList.add(entry.target.dataset.animate);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.18 });
+
+    document.querySelectorAll(".animate-on-scroll").forEach(el => observer.observe(el));
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'admin_navbar.html' %}
+{% block content %}
+
+<style>
+    .tabl{
+        min-height: 90vh;
+        margin-top: 100px;
+    }
+    table th {
+        background: #343a40;
+        color: white;
+        padding: 12px;
+    }
+    table td {
+        padding: 12px;
+        background: #fff;
+    }
+    .table-wrapper {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+</style>
+
+<div class="container tabl">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <h2 class="text-center fw-bold mb-4">Approve / Disapprove Doctors</h2>
+
+    <div class="table-wrapper">
+        <div style="overflow-x: auto;">
+            <table class="table table-bordered table-striped text-center">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Email</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for d in doc %}
+                    <tr>
+                        
+                        <td>{{ d.user.first_name }} {{ d.user.last_name }}</td>
+                        <td>{{ d.dep.Dept_name }}</td>
+                        <td>{{ d.user.email }}</td>
+
+                        <td>
+                            {% if d.status == 0 %}
+                                <a href="{% url 'approve' d.id %}" class="btn btn-success btn-sm">Approve</a>
+                                <a href="{% url 'disapprove' d.id %}" class="btn btn-danger btn-sm">Disapprove</a>
+                            {% endif %}
+
+                            {% if d.status == 1 %}
+                                <button class="btn btn-info btn-sm" disabled>Approved</button>
+                            {% endif %}
+
+                            {% if d.status == 2 %}
+                                <button class="btn btn-secondary btn-sm" disabled>Disapproved</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

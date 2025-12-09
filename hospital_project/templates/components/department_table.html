@@ -1,0 +1,28 @@
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Department Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if departments %}
+            {% for d in departments %}
+            <tr>
+                <td>{{ d.id }}</td>
+                <td>{{ d.Dept_name }}</td>
+                <td>
+                    <button onclick="deleteDepartment({{ d.id }})" class="btn btn-danger btn-sm">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="3" class="text-center">No Departments Available</td>
+        </tr>
+        {% endif %}
+    </tbody>
+</table>

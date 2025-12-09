@@ -1,0 +1,70 @@
+{% extends 'admin_navbar.html' %}
+{% load static %}
+{% block content %}
+
+<title>Doctor Details</title>
+
+<style>
+    body {
+        background: url("{% static 'images/admin_dash_bg.jpg' %}") no-repeat center center fixed;
+        background-size: cover;
+        padding: 0 !important;
+        color: #0f172a;
+    }
+    table {
+        background-color: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+    }
+    th {
+        background-color: #007bff;
+        color: #fff;
+        text-align: center;
+    }
+    td {
+        text-align: center;
+        vertical-align: middle;
+    }
+</style>
+
+<div class="container mt-5" style="margin-top: 100px !important; min-height: 90vh;">
+    <h1 class="text-center mb-4" style="font-size: 40px;">DOCTOR DETAILS</h1>
+
+    <!-- 🔹 FILTER BY DEPARTMENT -->
+    <div class="row mb-4">
+        <div class="col-md-4 mx-auto">
+            <select class="form-control" id="department_filter">
+                <option value="">-- Filter by Department --</option>
+                {% for d in departments %}
+                <option value="{{ d.id }}">{{ d.Dept_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="table-responsive" id="doctor_table">
+        {% include 'components/doctor_table.html' %}
+    </div>
+</div>
+
+<!-- 🔹 AJAX SCRIPT -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $("#department_filter").change(function () {
+        let dep_id = $(this).val();
+
+        $.ajax({
+            url: "{% url 'filter_doctors' %}",
+            data: {
+                'department_id': dep_id
+            },
+            success: function (response) {
+                $("#doctor_table").html(response.table_html);
+            }
+        });
+    });
+</script>
+
+{% endblock %}

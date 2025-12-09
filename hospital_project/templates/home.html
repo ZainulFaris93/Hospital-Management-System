@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    {% load static %}
+
+    <!-- Bootstrap 4.6, Animate.css, Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        /* --- Base --- */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fa;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        .navbar{
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        }
+
+        .navbar .navbar-brand { color: #008474; }
+        .navbar .nav-link { color: #333; }
+        .navbar .nav-link:hover { color: #008474; }
+
+        /* --- Hero --- */
+        .hero {
+            margin-top: 100px;
+            height: 500px;
+            background: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url("{% static 'images/home_banner.webp' %}");
+            background-size: cover;
+            background-position: center top;
+            background-repeat: no-repeat;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            color: white; 
+            text-align: center; 
+            position: relative;
+        }
+        @media (max-width: 768px) {
+            .hero {
+                max-height: 300px;
+            }
+        }
+        .hero .hero-inner { 
+            max-width: 980px; 
+            padding: 20px; 
+        }
+        .hero h1 { 
+            font-size: 3.6rem; 
+            font-weight: 700; 
+            margin-bottom: 0.6rem; 
+        }
+        .hero p { 
+            font-size: 1.15rem; 
+            margin-bottom: 1.2rem; 
+        }
+
+        .btn-custom { 
+            padding: 12px 30px; 
+            border-radius: 30px; 
+            font-size: 1.1rem; 
+        }
+
+        /* --- Card / Features --- */
+        .feature-card { padding: 34px 22px; border-radius: 14px; background: #ffffff; transition: transform .35s ease, box-shadow .35s ease; }
+        .feature-card:hover { transform: translateY(-10px); box-shadow: 0 18px 40px rgba(17,24,39,0.08); }
+
+        /* --- Parallax --- */
+        .parallax { background: url("{% static 'images/home_bg.jpg' %}") center/cover fixed; padding: 100px 0; color: white; text-align: center; }
+
+        /* --- Footer --- */
+        footer { background: #008474; color: white; padding: 48px 0; }
+        footer a { color: rgba(255,255,255,0.9); }
+
+        /* --- Scroll-triggered animation helpers --- */
+        .animate-on-scroll { opacity: 0; transform: translateY(30px); transition: opacity .6s ease-out, transform .6s ease-out; }
+        .animate-on-scroll.visible { opacity: 1; transform: translateY(0); }
+
+        /* small screens tweaks */
+        @media (max-width: 767px) {
+            .hero h1 { font-size: 2.2rem; }
+            .hero p { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+        <a class="navbar-brand font-weight-bold d-flex align-items-center" href="{% url 'home' %}">
+            <img src="{% static 'images/hospital_logo.svg' %}" width="44" class="mr-2" alt="logo">
+            StarCare Hospitals
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <i class="fa-solid fa-bars fa-lg" style="color:#008474;"></i>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto align-items-lg-center">
+                <li class="nav-item mr-3"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+                <li class="nav-item mr-3"><a class="nav-link" href="{% url 'about' %}">About</a></li>
+                <li class="nav-item mr-3"><a class="nav-link" href="{% url 'contact' %}">Contact</a></li>
+                <li class="nav-item mr-3"><a class="nav-link" href="{% url 'patient_signup' %}">Patient Signup</a></li>
+                <li class="nav-item mr-3"><a class="nav-link" href="{% url 'doctor_signup' %}">Doctor Signup</a></li>
+            </ul>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a href="{% url 'login_page' %}" class="btn btn-outline-success btn-sm mr-2">Login</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+    <div class="hero-inner animate-on-scroll" data-animate="animate__zoomIn">
+        <h1>Welcome to StarCare</h1>
+        <p>Experience the bliss of maternity and world-class healthcare with compassionate expertise and advanced technology.</p>
+        <a href="#features" class="btn btn-primary btn-custom mr-2">Get Started</a>
+        <a href="#contact" class="btn btn-outline-light btn-custom">Book Appointment</a>
+    </div>
+</section>
+
+<!-- Features -->
+<section id="features" class="container py-5">
+    <div class="text-center mb-5 animate-on-scroll" data-animate="animate__fadeInUp">
+        <h2 class="font-weight-bold">Our Features</h2>
+        <p class="text-muted">We offer outstanding care backed with modern technology and patient-centric processes.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4 animate-on-scroll" data-animate="animate__fadeInLeft">
+            <div class="feature-card shadow">
+                <h4>Trusted Leadership</h4>
+                <p class="text-muted">Experienced clinical leaders who ensure best-in-class outcomes and patient safety.</p>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4 animate-on-scroll" data-animate="animate__fadeInUp">
+            <div class="feature-card shadow">
+                <h4>Redefining Benchmarks</h4>
+                <p class="text-muted">Continuous quality improvement across operations, treatment pathways and infection control.</p>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4 animate-on-scroll" data-animate="animate__fadeInRight">
+            <div class="feature-card shadow">
+                <h4>Modular Technologies</h4>
+                <p class="text-muted">State-of-the-art equipment for fast and precise diagnostics — from labs to imaging.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- extended content to demonstrate scroll animations -->
+    <div class="row mt-4">
+        <div class="col-md-6 animate-on-scroll" data-animate="animate__fadeInLeft">
+            <div class="p-4 bg-white rounded shadow">
+                <h5>Patient-first Approach</h5>
+                <p class="text-muted">Personalized care plans, family-centred services and transparent communication during every step of treatment.</p>
+            </div>
+        </div>
+        <div class="col-md-6 animate-on-scroll" data-animate="animate__fadeInRight">
+            <div class="p-4 bg-white rounded shadow">
+                <h5>24/7 Emergency Services</h5>
+                <p class="text-muted">Rapid response teams, critical care specialists and full-fledged support services available round-the-clock.</p>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+<!-- Parallax -->
+<section class="parallax animate-on-scroll" data-animate="animate__fadeInUp">
+    <div class="container">
+        <h2>Comprehensive Diagnostic & Treatment</h2>
+        <p class="lead">Committed to achieving the highest level of quality through professionalism, innovation and ethical practices.</p>
+    </div>
+</section>
+
+<!-- About -->
+<section id="about" class="container py-5">
+    <div class="row align-items-center">
+        <div class="col-md-6 animate-on-scroll" data-animate="animate__slideInLeft">
+            <h2>Welcome To StarCare</h2>
+            <p>Starcare Hospital is a leading multi-speciality hospital in Kozhikode. We combine expertise, advanced technology and compassionate care to deliver excellent outcomes across multiple specialties including Maternity, Orthopedics, Cardiology and more.</p>
+            <ul class="list-unstyled mt-3 text-muted">
+                <li>• Experienced Consultants & Surgeons</li>
+                <li>• Modular Operating Theatres</li>
+                <li>• Infection Control & Patient Safety Programs</li>
+            </ul>
+        </div>
+        <div class="col-md-6 animate-on-scroll" data-animate="animate__slideInRight">
+            <img src="{% static 'images/home_wel.jpg' %}" class="img-fluid rounded shadow" alt="welcome">
+        </div>
+    </div>
+</section>
+
+<!-- Contact -->
+<section id="contact" class="container py-5">
+    <div class="text-center mb-4 animate-on-scroll" data-animate="animate__fadeInUp">
+        <h2>Contact Us</h2>
+        <p class="text-muted">We would love to hear from you. For appointments and enquiries, use the form below or call us.</p>
+    </div>
+
+    <form class="w-75 mx-auto shadow p-4 rounded animate-on-scroll" data-animate="animate__fadeInUp">
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label>Name</label>
+                <input type="text" class="form-control" required>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Email</label>
+                <input type="email" class="form-control" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Message</label>
+            <textarea class="form-control" rows="4" required></textarea>
+        </div>
+        <button class="btn btn-dark btn-block">Send Message</button>
+    </form>
+</section>
+
+<!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <h5 class="font-weight-bold">StarCare Hospitals</h5>
+                <p>Committed to achieving the highest level of quality care through innovation & professionalism.</p>
+            </div>
+            <div class="col-md-4 mb-3">
+                <h5 class="font-weight-bold">Quick Links</h5>
+                <ul class="list-unstyled">
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'about' %}">About</a></li>
+                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4 mb-3">
+                <h5 class="font-weight-bold">Contact Us</h5>
+                <p>+91 98765 43210</p>
+                <p>support@starcare.com</p>
+                <p>Kozhikode, Kerala</p>
+            </div>
+        </div>
+        <hr style="border-color: rgba(255,255,255,0.12)">
+        <div class="text-center">© 2025 StarCare. All Rights Reserved.</div>
+    </div>
+</footer>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Smooth scroll for anchor links (offset for fixed navbar)
+(function() {
+    $(document).on('click', 'a.nav-link, .hero .btn', function(e) {
+        var href = $(this).attr('href');
+        if (href && href.startsWith('#')) {
+            e.preventDefault();
+            var target = $(href);
+            if (target.length) {
+                var offset = target.offset().top - 70;
+                $('html, body').animate({ scrollTop: offset }, 600);
+            }
+        }
+    });
+})();
+
+// Intersection Observer for scroll-triggered animations
+(function(){
+    const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const el = entry.target;
+                // add visible helper class for CSS fallback
+                el.classList.add('visible');
+
+                // animate.css class
+                const anim = el.dataset.animate;
+                if (anim) {
+                    el.classList.add('animate__animated');
+                    el.classList.add(anim);
+                }
+
+                // optional: unobserve after animation fired
+                obs.unobserve(el);
+            }
+        });
+    }, { threshold: 0.18 });
+
+    // attach observer to all elements with .animate-on-scroll
+    document.addEventListener('DOMContentLoaded', function(){
+        document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+    });
+})();
+
+// Accessibility: enable keyboard focus outline for keyboard users only
+(function(){
+    function handleFirstTab(e) {
+        if (e.key === 'Tab') {
+            document.body.classList.add('user-is-tabbing');
+            window.removeEventListener('keydown', handleFirstTab);
+        }
+    }
+    window.addEventListener('keydown', handleFirstTab);
+})();
+</script>
+
+</body>
+</html>

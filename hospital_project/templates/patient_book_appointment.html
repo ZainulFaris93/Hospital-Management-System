@@ -1,0 +1,165 @@
+{% extends 'patient_navbar.html' %}
+{% block content %}
+
+<style>
+    body {
+        background: linear-gradient(to bottom right, #eef6ff, #ffffff);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .booking-container {
+        max-width: 700px;
+        margin: 30px auto;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .booking-title {
+        text-align: center;
+        font-weight: 700;
+        color: #0056b3;
+        margin-bottom: 20px;
+        font-size: 28px;
+    }
+
+    label {
+        font-weight: 600;
+    }
+
+    .form-control, .custom-select {
+        border-radius: 10px;
+        height: 48px;
+        font-size: 15px;
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        border: none;
+        color: white;
+        padding: 12px;
+        width: 100%;
+        border-radius: 12px;
+        font-size: 18px;
+        font-weight: 600;
+        transition: 0.3s;
+    }
+
+    .submit-btn:hover {
+        opacity: .9;
+        transform: translateY(-3px);
+    }
+
+    .icon-box {
+        text-align: center;
+        font-size: 50px;
+        color: #007bff;
+        margin-bottom: 15px;
+    }
+
+</style>
+
+<div class="container">
+    <div class="booking-container">
+        {% if messages %}
+        <div class="container mt-3">
+            {% for msg in messages %}
+                <div class="alert alert-info">{{ msg }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="icon-box">
+            <i class="fas fa-calendar-check"></i>
+        </div>
+
+        <h2 class="booking-title">Book Appointment</h2>
+
+        <form action="{% url 'save_appointment' %}" method="POST">
+            {% csrf_token %}
+
+            <!-- Patient ID (read only) -->
+            <div class="form-group">
+                <label>Patient ID</label>
+                <input type="text" class="form-control" 
+                       value="{{ patient.p_id }}" readonly>
+            </div>
+
+            <!-- Department -->
+            <div class="form-group">
+                <label>Select Department</label>
+                <select name="department" id="department" class="custom-select" required>
+                    <option value="">-- Choose Department --</option>
+                    {% for d in departments %}
+                        <option value="{{ d.id }}">{{ d.Dept_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Doctor -->
+            <div class="form-group">
+                <label>Select Doctor</label>
+                <select name="doctor" id="doctor" class="custom-select" required>
+                    <option value="">-- Select Department First --</option>
+                </select>
+            </div>
+
+            <!-- Date -->
+            <div class="form-group">
+                <label>Select Date</label>
+                <input type="date" name="date" id="datePicker" class="form-control" required>
+            </div>
+            
+            <!-- Time Slot -->
+            <div class="form-group">
+                <label>Select Time Slot</label>
+                <select name="time" class="custom-select" required>
+                    <option value="">-- Select Time Slot --</option>
+                    <option value="09:00 AM - 10:00 AM">09:00 AM - 10:00 AM</option>
+                    <option value="10:00 AM - 11:00 AM">10:00 AM - 11:00 AM</option>
+                    <option value="11:00 AM - 12:00 PM">11:00 AM - 12:00 PM</option>
+                    <option value="02:00 PM - 03:00 PM">02:00 PM - 03:00 PM</option>
+                    <option value="03:00 PM - 04:00 PM">03:00 PM - 04:00 PM</option>
+                </select>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="submit-btn">
+                Confirm Appointment
+            </button>
+        </form>
+
+    </div>
+</div>
+
+
+<!-- FontAwesome -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+
+<!-- JS: Disable past dates -->
+<script>
+    let today = new Date().toISOString().split('T')[0];
+    document.getElementById("datePicker").setAttribute("min", today);
+</script>
+
+<!-- JS / AJAX to load doctors based on department -->
+<script>
+    document.getElementById("department").addEventListener("change", function () {
+        let depId = this.value;
+
+        fetch(`/load-doctors/${depId}/`)
+            .then(response => response.json())
+            .then(data => {
+                let doctorSelect = document.getElementById("doctor");
+                doctorSelect.innerHTML = "<option value=''>-- Select Doctor --</option>";
+
+                data.doctors.forEach(doc => {
+                    doctorSelect.innerHTML += `<option value="${doc.id}">${doc.name}</option>`;
+                });
+            });
+    });
+</script>
+
+{% endblock %}

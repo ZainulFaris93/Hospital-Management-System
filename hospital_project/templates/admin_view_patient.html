@@ -1,0 +1,80 @@
+{% extends 'admin_navbar.html' %}
+{% load static %}
+{% block content %}
+
+<title>Patient Details</title>
+
+<style>
+    body {
+        background: url("{% static 'images/admin_dash_bg.jpg' %}") no-repeat center center fixed;
+        background-size: cover;
+        padding: 0 !important;
+        color: #0f172a;
+    }
+    table {
+        background-color: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+    }
+    th {
+        background-color: #008474;
+        color: white;
+        text-align: center;
+    }
+    td {
+        text-align: center;
+        vertical-align: middle;
+    }
+</style>
+
+<div class="container mt-5" style="margin-top: 100px !important; min-height: 90vh;">
+    <h1 class="text-center mb-4" style="font-size: 40px;">PATIENT DETAILS</h1>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="text-center">
+                <tr>
+                    <th>Patient ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Age</th>
+                    <th colspan="2">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% if patients %}
+                    {% for p in patients %}
+                    <tr>
+                        <td>{{ p.p_id }}</td>
+                        <td>{{ p.user.first_name }} {{ p.user.last_name }}</td>
+                        <td>{{ p.user.email }}</td>
+                        <td>{{ p.Phone_number }}</td>
+                        <td>{{ p.age }}</td>
+
+                        <td>
+                            <a href="{% url 'admin_view_patient_details' p.id %}" class="btn btn-info btn-sm">
+                                View
+                            </a>
+                        </td>
+
+                        <td>
+                            <a href="{% url 'delete_patient' p.id %}" class="btn btn-danger btn-sm">
+                                Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center">No patients found.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

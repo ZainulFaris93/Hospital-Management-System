@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    {% load static %}
+    <style>
+        body {
+            background: #f4f6f9;
+        }
+        .navbar {
+            padding: 15px;
+            background: linear-gradient(90deg, #1e3c72, #2a5298);
+        }
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 22px;
+        }
+        .nav-link {
+            font-size: 16px;
+            font-weight: 500;
+            color: #fff !important;
+            margin-left: 8px;
+        }
+        .nav-link:hover {
+            opacity: 0.8;
+        }
+        #count-badge {
+            background: #ff4d4d;
+            padding: 4px 9px;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .dropdown-menu {
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+        footer { 
+            background: linear-gradient(90deg, #1e3c72, #2a5298); 
+            color: white; 
+            padding: 48px 0; 
+            margin-top: 70px;
+        }
+
+        footer a { 
+            color: rgba(255,255,255,0.9); 
+        }
+
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <a class="navbar-brand" href="{% url 'doctor_home' %}">
+        <img src="{% static 'images/hospital_logo.svg' %}" width="44" class="mr-2" alt="logo">
+         Doctor Panel
+    </a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+
+            <!-- Upcoming Appointments -->
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'doctor_appointments' %}">
+                    <i class="fa-solid fa-calendar-check mr-1"></i>
+                    Appointments
+                    <span id="count-badge" style="display: none;">0</span>
+                </a>
+            </li>
+
+            <!-- Appointment History -->
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'doctor_appointment_history' %}">
+                    <i class="fa-solid fa-clock-rotate-left mr-1"></i>
+                    Appointments History
+                </a>
+            </li>
+
+            <!-- Profile Dropdown -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" data-toggle="dropdown">
+                    <i class="fa-solid fa-user-gear mr-1"></i> Dr. {{ request.user.first_name }}
+                </a>
+                <div class="dropdown-menu dropdown-menu-right shadow-sm">
+                    <a class="dropdown-item" href="{% url 'doctor_reset_password' %}"><i class="fa-solid fa-key mr-2"></i> Reset Password</a>
+                    <a class="dropdown-item" href="{% url 'doctor_edit_profile' %}"><i class="fa-solid fa-user-pen mr-2"></i> Edit Profile</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger" href="{% url 'logout_function' %}">
+                        <i class="fa-solid fa-right-from-bracket mr-2"></i> Logout
+                    </a>
+                </div>
+            </li>
+
+        </ul>
+    </div>
+</nav>
+
+{% block content %}{% endblock %}
+
+
+<footer>
+    <div class="container">
+
+        <div class="row">
+
+            <div class="col-md-4 mb-3">
+                <h5 class="font-weight-bold">StarCare Hospitals</h5>
+                <p>Dedicated to delivering world-class medical services with compassion & excellence.</p>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <h5 class="font-weight-bold">Quick Links</h5>
+                <ul class="list-unstyled">
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'about' %}">About</a></li>
+                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                </ul>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <h5 class="font-weight-bold">Contact Us</h5>
+                <p>+91 98765 43210</p>
+                <p>support@starcare.com</p>
+                <p>Kozhikode, Kerala</p>
+            </div>
+
+        </div>
+
+        <hr style="border-color: rgba(255,255,255,0.12)">
+        <div class="text-center">© 2025 StarCare. All Rights Reserved.</div>
+
+    </div>
+</footer>
+
+
+<!-- JQuery + Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function loadAppointmentCount() {
+        $.ajax({
+            url: "{% url 'doctor_appointment_count' %}",
+            method: "GET",
+            success: function(res) {
+                if (res.count>0){
+                    $("#count-badge").text(res.count).show();
+                }else{
+                    $("#count-badge").hide();
+                }
+            }
+        });
+    }
+    loadAppointmentCount();
+    setInterval(loadAppointmentCount, 5000);
+</script>
+
+</body>
+</html>

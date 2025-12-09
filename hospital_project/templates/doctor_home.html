@@ -1,0 +1,148 @@
+{% extends 'doctor_navbar.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    .dashboard-title {
+        font-weight: 700;
+        font-size: 28px;
+        color: #005f56;
+    }
+
+    .card-custom {
+        border-radius: 16px;
+        overflow: hidden;
+        transition: 0.3s ease;
+        border: none;
+    }
+
+    .card-custom:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+    }
+
+    .card-header-gradient {
+        padding: 18px 20px;
+        color: white;
+        font-weight: 600;
+        font-size: 18px;
+    }
+
+    .stat-card {
+        border-radius: 16px;
+        transition: 0.3s ease;
+        background: white;
+    }
+
+    .stat-card:hover {
+        transform: scale(1.03);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    }
+
+    .stat-number {
+        font-size: 32px;
+        font-weight: 700;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: #888;
+    }
+</style>
+
+<div class="container mt-5">
+
+    <!-- Dashboard Title -->
+    <h2 class="dashboard-title mb-4">
+        <i class="fa-solid fa-chart-pie mr-2"></i>
+        Doctor Dashboard
+    </h2>
+
+    <div class="row">
+
+        <!-- Next Appointment -->
+        <div class="col-md-6 mb-4">
+            <div class="card card-custom shadow-lg">
+                <div class="card-header-gradient" style="background: linear-gradient(90deg, #0091b8, #17a2b8);">
+                    <i class="fa-solid fa-calendar-day mr-2"></i>
+                    Next Appointment
+                </div>
+                <div class="card-body">
+
+                    {% if next_appointment %}
+                        <h4 class="font-weight-bold mb-2 text-dark">
+                            {{ next_appointment.patient.first_name }} {{ next_appointment.patient.last_name }}
+                        </h4>
+
+                        <p class="mb-1">
+                            <i class="fa-solid fa-calendar text-info mr-2"></i>
+                            <strong>{{ next_appointment.date }}</strong>
+                        </p>
+
+                        <p class="mb-3">
+                            <i class="fa-solid fa-clock text-info mr-2"></i>
+                            <strong>{{ next_appointment.time }}</strong>
+                        </p>
+
+                        <a href="{% url 'doctor_view_appointment' next_appointment.id %}"
+                           class="btn btn-info btn-block">
+                            <i class="fa-solid fa-eye mr-1"></i> View Details
+                        </a>
+                    {% else %}
+                        <p class="text-muted text-center py-3">No upcoming appointments.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Today Overview -->
+        <div class="col-md-6 mb-4">
+            <div class="card card-custom shadow-lg">
+                <div class="card-header-gradient" style="background: linear-gradient(90deg, #0f9b4e, #28a745);">
+                    <i class="fa-solid fa-chart-line mr-2"></i>
+                    Today Overview
+                </div>
+                <div class="card-body">
+
+                    <p><strong>Total Appointments:</strong> {{ today_count }}</p>
+                    <p><strong>Consulted:</strong> {{ completed_today }}</p>
+                    <p><strong>Pending:</strong> {{ pending_today }}</p>
+
+                    <a href="{% url 'doctor_appointments' %}" class="btn btn-success btn-block mt-3">
+                        <i class="fa-solid fa-calendar-week mr-1"></i> View All Appointments
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Additional Stats -->
+    <div class="row">
+
+        <div class="col-md-4 mb-4">
+            <div class="stat-card p-4 shadow text-center">
+                <div class="stat-number text-primary">{{ total_patients }}</div>
+                <div class="stat-label">Total Patients</div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="stat-card p-4 shadow text-center">
+                <div class="stat-number text-warning">{{ monthly_appointments }}</div>
+                <div class="stat-label">Appointments This Month</div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="stat-card p-4 shadow text-center">
+                <div class="stat-number text-danger">{{ cancelled_appointments }}</div>
+                <div class="stat-label">Cancelled / Missed</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

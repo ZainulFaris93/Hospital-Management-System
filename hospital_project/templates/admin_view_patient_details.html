@@ -1,0 +1,32 @@
+{% extends 'admin_navbar.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-5" style="margin-top: 100px !important; min-height: 90vh;">
+    <h1 class="text-center mb-4">PATIENT PROFILE</h1>
+
+    <div class="card shadow p-4">
+
+        <div class="row">
+            <div class="col-md-4 text-center">
+                {% if patient.user %}
+                    <img src="{% static 'images/default_user.png' %}" width="180" class="rounded-circle">
+                {% endif %}
+            </div>
+
+            <div class="col-md-8">
+                <h3>{{ patient.user.first_name }} {{ patient.user.last_name }}</h3>
+
+                <p><strong>Email:</strong> {{ patient.user.email }}</p>
+                <p><strong>Patient ID:</strong> {{ patient.p_id }}</p>
+                <p><strong>Phone:</strong> {{ patient.Phone_number }}</p>
+                <p><strong>Age:</strong> {{ patient.age }}</p>
+                <p><strong>Address:</strong> {{ patient.Address }}</p>
+                <!-- <a href="{% url 'admin_view_patient' %}"><button class="btn btn-danger">Back</button></a> -->
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,74 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-3">
+  <div class="container">
+
+    <!-- BRAND / LOGO -->
+    <a class="navbar-brand font-weight-bold" href="{% url 'user_home' %}" style="font-size: 26px; color: #523C6A;">
+      <img src="https://cdn-icons-png.flaticon.com/512/891/891407.png" 
+           width="32" class="mr-2"> ShopEasy
+    </a>
+
+    <!-- TOGGLER -->
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- MENU ITEMS -->
+    <div class="collapse navbar-collapse" id="navbarNav">
+
+      <!-- LEFT LINKS -->
+      <ul class="navbar-nav mx-auto">
+        <li class="nav-item mx-2">
+          <a class="nav-link font-weight-semibold" href="{% url 'user_home' %}">Home</a>
+        </li>
+        <li class="nav-item mx-2">
+          <a class="nav-link font-weight-semibold" href="{% url 'all_products' %}">Products</a>
+        </li>
+        <li class="nav-item mx-2">
+          <a class="nav-link font-weight-semibold" href="{% url 'categories' %}">Categories</a>
+        </li>
+        <li class="nav-item mx-2">
+          <a class="nav-link font-weight-semibold" href="{% url 'offers' %}">Offers</a>
+        </li>
+      </ul>
+
+      <!-- RIGHT SIDE -->
+      <ul class="navbar-nav">
+
+        <!-- SEARCH BAR -->
+        <form action="{% url 'search' %}" method="GET" class="form-inline mr-3 d-none d-lg-flex">
+          <input class="form-control" type="search" name="query" placeholder="Search for products..."
+                 style="width: 200px; border-radius: 20px;">
+        </form>
+
+        <!-- CART -->
+        <li class="nav-item mr-3">
+          <a class="nav-link" href="{% url 'cart' %}">
+            <img src="https://cdn-icons-png.flaticon.com/512/891/891462.png" width="26">
+            <span class="badge badge-danger" style="position: relative; top: -10px; right: 8px;">
+              {{ cart_count }}
+            </span>
+          </a>
+        </li>
+
+        <!-- PROFILE DROPDOWN -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">
+            <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png"
+                 width="30" class="rounded-circle">
+            {{ user.username }}
+          </a>
+
+          <div class="dropdown-menu dropdown-menu-right">
+            <a class="dropdown-item" href="{% url 'profile' %}">My Profile</a>
+            <a class="dropdown-item" href="{% url 'my_orders' %}">My Orders</a>
+            <a class="dropdown-item" href="{% url 'wishlist' %}">Wishlist</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item text-danger" href="{% url 'logout' %}">Logout</a>
+          </div>
+        </li>
+
+      </ul>
+
+    </div>
+  </div>
+</nav>

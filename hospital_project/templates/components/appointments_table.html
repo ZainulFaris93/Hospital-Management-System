@@ -1,0 +1,55 @@
+<div class="table-responsive">
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Patient</th>
+                <th>Patient ID</th>
+                <th>Doctor</th>
+                <th>Department</th>
+                <th>Appointment Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% if appointments %}
+                {% for app in appointments %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+
+                    <td>
+                        <a href="{% url 'admin_view_patient_details' app.patient.id %}">
+                            {{ app.patient.user.first_name }} {{ app.patient.user.last_name }}
+                        </a>
+                    </td>
+
+                    <td>{{ app.patient.p_id }}</td>
+                    <td>{{ app.doctor.user.first_name }} {{ app.doctor.user.last_name }}</td>
+                    <td>{{ app.dept.Dept_name }}</td>
+                    <td>{{ app.date }}</td>
+
+                    <td>
+                        {% if app.status == 0 %}
+                            <button class="btn btn-success btn-sm approve-btn" data-id="{{ app.id }}">Approve</button>
+                            <button class="btn btn-danger btn-sm reject-btn" data-id="{{ app.id }}">Reject</button>
+                        {% elif app.status == 1 %}
+                            <button class="btn btn-info btn-sm" disabled>Approved</button>
+                        {% elif app.status == 2 %}
+                            <button class="btn btn-secondary btn-sm" disabled>Rejected</button>
+                        {% elif app.status == 3 %}
+                            <button class="btn btn-secondary btn-sm" disabled>Consulted</button>
+                        {% elif app.status == 4 %}
+                            <button class="btn btn-secondary btn-sm" disabled>Not Consulted</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7" class="text-center">No appointments available.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>

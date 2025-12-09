@@ -1,0 +1,43 @@
+{% extends 'admin_navbar.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    .badge {
+        background-color: #17a2b8;
+        color: white;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+</style>
+<div class="container mt-5" style="margin-top: 100px !important; min-height: 90vh;">
+    <h1 class="text-center mb-4">DOCTOR PROFILE</h1>
+
+    <div class="card shadow p-4">
+
+        <div class="row">
+            <div class="col-md-4 text-center">
+                {% if doctor.Profile %}
+                    <img src="{{ doctor.Profile.url }}" width="180" class="rounded-circle">
+                {% else %}
+                    <img src="{% static 'images/default_user.png' %}" width="180" class="rounded-circle">
+                {% endif %}
+            </div>
+
+            <div class="col-md-8">
+                <h3>{{ doctor.user.first_name }} {{ doctor.user.last_name }}</h3>
+
+                <p><span class="badge">{{ doctor.dep.DeptNmae }}</span></p>
+                <p><strong>Email:</strong> {{ doctor.user.email }}</p>
+                <p><strong>Phone:</strong> {{ doctor.Phone_number }}</p>
+                <p><strong>Age:</strong> {{ doctor.age }}</p>
+                <p><strong>Address:</strong> {{ doctor.Address }}</p>
+                <!-- <a href="{% url 'admin_view_doc' %}"><button class="btn btn-danger">Back</button></a> -->
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

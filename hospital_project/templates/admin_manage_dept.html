@@ -1,0 +1,93 @@
+{% extends 'admin_navbar.html' %}
+{% load static %}
+{% block content %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<title>Manage Departments</title>
+
+<style>
+    #bg-card {
+        background: rgba(255,255,255,0.85);
+        padding: 25px;
+        border-radius: 10px;
+        margin-top: 120px;
+    }
+    table {
+        background: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+    }
+    th {
+        background-color: #0d6efd;
+        color: white;
+        text-align: center;
+    }
+    td {
+        text-align: center;
+    }
+</style>
+
+<div class="container" style="min-height: 90vh;">
+    <div id="bg-card" class="shadow">
+
+        <h2 class="text-center mb-4">Manage Departments</h2>
+
+        <div class="row mb-4">
+            <div class="col-md-8 mb-3">
+                <input type="text" id="dept_name" class="form-control" placeholder="Enter Department Name">
+            </div>
+            <div class="col-md-4">
+                <button id="add_btn" class="btn btn-success btn-block">Add Department</button>
+            </div>
+        </div>
+
+        <div id="department_table">
+            {% include 'components/department_table.html' %}
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+
+    $("#add_btn").click(function () {
+        let name = $("#dept_name").val().trim();
+
+        if (name === "") {
+            alert("Department name cannot be empty!");
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'add_department' %}",
+            method: "POST",
+            data: {
+                dept_name: name,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (response) {
+                $("#department_table").html(response.table_html);
+                $("#dept_name").val("");
+            }
+        });
+    });
+
+    function deleteDepartment(id) {
+        $.ajax({
+            url: "{% url 'delete_department' %}",
+            method: "POST",
+            data: {
+                dept_id: id,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (response) {
+                $("#department_table").html(response.table_html);
+            }
+        });
+    }
+
+</script>
+
+{% endblock %}

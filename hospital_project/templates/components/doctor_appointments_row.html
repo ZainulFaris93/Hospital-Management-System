@@ -1,0 +1,39 @@
+<td>{{ forloop.counter }}</td>
+
+<td>
+    <strong>{{ app.patient.user.first_name }} {{ app.patient.user.last_name }}</strong><br>
+    <small class="text-muted">ID: {{ app.patient.id }}</small>
+</td>
+
+<td>{{ app.patient.phone }}</td>
+
+<td>{{ app.dept.Dept_name }}</td>
+
+<td>{{ app.date }}</td>
+
+<td>{{ app.time }}</td>
+
+<td>
+    {% if app.status == 1 %}
+        <span class="badge badge-success">Approved</span>
+    {% elif app.status == 3 %}
+        <span class="badge badge-primary">Consulted</span>
+    {% elif app.status == 4 %}
+        <span class="badge badge-danger">Not Consulted</span>
+    {% endif %}
+</td>
+
+<td>
+    <a href="{% url 'doctor_view_appointment' app.id %}" class="btn btn-sm btn-info mb-1">View</a>
+
+    {% if app.status == 1 %}
+        <button class="btn btn-sm btn-success consult-btn mb-1" data-id="{{ app.id }}">
+            Consulted
+        </button>
+        <button class="btn btn-sm btn-danger notconsult-btn mb-1" data-id="{{ app.id }}">
+            Not Consulted
+        </button>
+    {% else %}
+        <span class="text-muted">Updated</span>
+    {% endif %}
+</td>
