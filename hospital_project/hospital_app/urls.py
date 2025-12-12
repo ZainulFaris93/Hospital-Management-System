@@ -32,9 +32,12 @@ urlpatterns = [
     path('admin_manage_dept/', views.admin_manage_dept, name='admin_manage_dept'),
     path('add_department/', views.add_department, name='add_department'),
     path('delete_department/', views.delete_department, name='delete_department'),
+    path('edit_department/', views.edit_department, name='edit_department'),
     path('admin_view_appointments/', views.admin_view_appointments, name='admin_view_appointments'),
     path('filter_appointments/', views.filter_appointments, name='filter_appointments'),
     path('update_appointment_status/', views.update_appointment_status, name='update_appointment_status'),
+    path('admin_appointment_history/', views.admin_appointment_history, name='admin_appointment_history'),
+    path('filter_appointment_history/', views.filter_appointment_history, name='filter_appointment_history'),
     path('admin_reset_password/', views.admin_reset_password, name='admin_reset_password'),
     path('admin_reset_password_function/', views.reset_password_function, name='admin_reset_password_function'),
 

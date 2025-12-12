@@ -40,10 +40,10 @@ def patient_signup_function(request):
         us=request.POST['patient']
         if CustomUser.objects.filter(username=uname).exists() or CustomUser.objects.filter(email=mail).exists():
             messages.error(request,'Username or email already exists')
-            return render(request,'patient_signup.html')
+            return redirect('patient_signup')
         elif Patient.objects.filter(Phone_number = phone).exists():
             messages.error(request,'Phone Number already exists')
-            return render(request,'patient_signup.html')
+            return redirect('patient_signup')
         else:
             pas=str(random.randint(100000,999999))
             p_id = random.randint(1000,9999)
@@ -52,7 +52,7 @@ def patient_signup_function(request):
             tea=Patient(p_id=p_id,age=age,Phone_number=phone,Address=address,user=user)
             tea.save()
             subject='Regsitration Successful'
-            message='username:'+str(uname)+"\n"+'password:'+str(pas)+"\n"+'email:'+str(mail)
+            message='Patient ID:'+str(p_id)+"\n"+'username:'+str(uname)+"\n"+'password:'+str(pas)+"\n"+'email:'+str(mail)
             send_mail(subject,message,settings.EMAIL_HOST_USER,{mail})
             messages.success(request,'User registration success.Please Check Your E-mail for Login Credentials..')
             return redirect('login_page')
@@ -75,10 +75,10 @@ def doctor_signup_function(request):
         us=request.POST['doc']
         if CustomUser.objects.filter(username=uname).exists() or CustomUser.objects.filter(email=mail).exists():
             messages.error(request,'Username or email already exists')
-            return render(request,'doctor_signup.html')
+            return redirect('doctor_signup')
         elif Doctor.objects.filter(Phone_number = phone).exists():
             messages.error(request,'Phone Number already exists')
-            return render(request,'doctor_signup.html')
+            return redirect('doctor_signup')
         else:
             user=CustomUser.objects.create_user(first_name=fname,last_name=lname,username=uname,email=mail,user_type=us)
             user.save()
@@ -188,7 +188,7 @@ def disapprove(request, id):
     usr.save()
     subject = 'Admin Disapproved'
     message='Registration is Unsuccessful...'
-    send_mail(subject,"Hello "+' '+message,settings.EMAIL_HOST_USER,{usr.user.mail})
+    send_mail(subject,"Hello "+' '+message,settings.EMAIL_HOST_USER,{usr.user.email})
     messages.info(request, 'User Disapproved')
     return redirect('admin_doc_approval')
 
@@ -223,6 +223,7 @@ def delete_doctor(request, id):
     user = doctor.user
     doctor.delete()
     user.delete()
+    messages.error(request,'Doctor Deleted Successfully')
     return redirect('admin_view_doc')
 
 @login_required(login_url='login_page')
@@ -241,20 +242,24 @@ def admin_add_doc(request):
         us=request.POST['doc']
         if CustomUser.objects.filter(username=uname).exists() or CustomUser.objects.filter(email=mail).exists():
             messages.error(request,'Username or email already exists')
-            return render(request,'admin_add_doc.html')
+            return redirect('admin_add_doc')
         elif Doctor.objects.filter(Phone_number = phone).exists():
             messages.error(request,'Phone Number already exists')
-            return render(request,'admin_add_doc.html')
+            return redirect('admin_add_doc')
         else:
             user=CustomUser.objects.create_user(first_name=fname,last_name=lname,username=uname,email=mail,user_type=us)
+            password = str(random.randint(100000, 999999))
+            user.set_password(password)
             user.save()
-            tea=Doctor(Phone_number=phone,user=user,Address=address,Profile=prof,dep=d)
+            tea=Doctor(Phone_number=phone,user=user,Address=address,Profile=prof,dep=d, status=1)
             tea.save()
-            subject='Regsitration confirmation'
-            message='Registration is success ,please wait for admin approval...'
-            send_mail(subject,"Hello "+uname+' '+message,settings.EMAIL_HOST_USER,{mail})
-            messages.success(request,'Doctor Added Successfully..')
-            return render(request,'admin_add_doc.html')
+
+            subject = 'Admin Created Your Account'
+            message = f"Username: {user.username}\nPassword: {password}\nEmail: {user.email}"
+            send_mail(subject, message, settings.EMAIL_HOST_USER, [user.email])
+
+            messages.info(request, 'Doctor Added Successfully')
+            return redirect('admin_add_doc')
         
     return render(request, 'admin_add_doc.html', {'dept':d})
 
@@ -278,6 +283,7 @@ def delete_patient(request, id):
     user = patient.user
     patient.delete()
     user.delete()
+    messages.error(request,'Patient Deleted Successfully')
     return redirect('admin_view_patient')
 
 
@@ -294,10 +300,10 @@ def admin_add_patient(request):
         us=request.POST['patient']
         if CustomUser.objects.filter(username=uname).exists() or CustomUser.objects.filter(email=mail).exists():
             messages.error(request,'Username or email already exists')
-            return render(request,'admin_add_patient.html')
+            return redirect('admin_add_patient')
         elif Patient.objects.filter(Phone_number = phone).exists():
             messages.error(request,'Phone Number already exists')
-            return render(request,'admin_add_patient.html')
+            return redirect('admin_add_patient')
         else:
             pas=str(random.randint(100000,999999))
             p_id = random.randint(1000,9999)
@@ -340,7 +346,27 @@ def delete_department(request):
     table_html = render_to_string("components/department_table.html", {"departments": departments})
     return JsonResponse({"table_html": table_html})
 
+def edit_department(request):
+    if request.method == "GET":
+        dep_id = request.GET.get("id")
+        dep = Department.objects.get(id=dep_id)
+        data = {
+            "Dept_name": dep.Dept_name
+        }
+        return JsonResponse(data)
+    elif request.method == "POST":
+        dept_id = request.POST.get("dept_id")
+        name = request.POST.get("dept_name").strip()
 
+        if name != "":
+            dep = Department.objects.get(id=dept_id)
+            dep.Dept_name = name
+            dep.save()
+        departments = Department.objects.all().order_by("id")
+        table_html = render_to_string("components/department_table.html", {"departments": departments})
+        return JsonResponse({"table_html": table_html})
+
+        
 
 
 @login_required(login_url='login_page')
@@ -397,6 +423,31 @@ def update_appointment_status(request):
     table_html = render_to_string('components/appointments_table.html', {'appointments': qs})
     return JsonResponse({'table_html': table_html})
 
+@login_required(login_url='login_page')
+def admin_appointment_history(request):
+    # History = Disapproved, Consulted, Not Consulted
+    appointments = Appointment.objects.filter(status__in=[2, 3, 4]).order_by('-date')
+
+    doctors = Doctor.objects.filter(status=1).select_related('user', 'dep')
+
+    return render(request, "admin_appointment_history.html", {
+        "appointments": appointments,
+        "doctors": doctors,
+    })
+
+def filter_appointment_history(request):
+    doctor_id = request.GET.get('doctor_id')
+
+    qs = Appointment.objects.filter(status__in=[2, 3, 4]).order_by('-date')
+
+    if doctor_id:
+        qs = qs.filter(doctor_id=doctor_id)
+
+    table_html = render_to_string(
+        "components/appointment_history_table.html",
+        {"appointments": qs}
+    )
+    return JsonResponse({"table_html": table_html})
 
 
 @login_required(login_url='login_page')
@@ -628,7 +679,6 @@ def doctor_edit_profile(request):
         doctor.Phone_number = request.POST.get("phone")
         doctor.dep_id = request.POST.get("dpt")
 
-        # Update profile photo if uploaded
         if request.FILES.get("profile"):
             doctor.Profile = request.FILES["profile"]
 

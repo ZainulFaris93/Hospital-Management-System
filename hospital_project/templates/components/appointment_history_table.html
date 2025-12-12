@@ -1,0 +1,50 @@
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Patient</th>
+            <th>Doctor</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% if appointments %}
+            {% for app in appointments %}
+            <tr>
+
+                <td>
+                    {{ app.patient.user.first_name }} {{ app.patient.user.last_name }}
+                </td>
+
+                <td>
+                    {{ app.doctor.user.first_name }} {{ app.doctor.user.last_name }}
+                    <br>
+                    <small class="text-muted">{{ app.doctor.dep.Dept_name }}</small>
+                </td>
+
+                <td>{{ app.date }}</td>
+                <td>{{ app.time }}</td>
+
+                <td>
+                    {% if app.status == 2 %}
+                        <span class="badge bg-danger">Disapproved</span>
+
+                    {% elif app.status == 3 %}
+                        <span class="badge bg-success">Consulted</span>
+
+                    {% elif app.status == 4 %}
+                        <span class="badge bg-warning text-dark">Not Consulted</span>
+
+                    {% else %}
+                        <span class="badge bg-secondary">Unknown</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="6" class="text-center">No History Available</td></tr>
+        {% endif %}
+    </tbody>
+</table>

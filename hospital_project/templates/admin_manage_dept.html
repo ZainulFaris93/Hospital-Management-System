@@ -29,6 +29,14 @@
 </style>
 
 <div class="container" style="min-height: 90vh;">
+    {% if messages %}
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+        </div>
+    {% endif %}
     <div id="bg-card" class="shadow">
 
         <h2 class="text-center mb-4">Manage Departments</h2>
@@ -39,6 +47,7 @@
             </div>
             <div class="col-md-4">
                 <button id="add_btn" class="btn btn-success btn-block">Add Department</button>
+                <button id="update_btn" class="btn btn-success btn-block" style="display: none; margin-top: -1px;">Update</button>
             </div>
         </div>
 
@@ -51,7 +60,7 @@
 
 
 <script>
-
+    let edit_id = null;
     $("#add_btn").click(function () {
         let name = $("#dept_name").val().trim();
 
@@ -88,6 +97,43 @@
         });
     }
 
+    function editDepartment(id) {
+        edit_id = id;
+        $.ajax({
+            type: 'GET',
+            url: "{% url 'edit_department' %}?id=" + id,
+            success: function(data){
+                $('#dept_name').val(data.Dept_name);
+                $('#add_btn').hide();
+                $('#update_btn').show();
+            }
+        })
+    }
+
+    $("#update_btn").click(function () {
+        let name = $("#dept_name").val().trim();
+
+        if (name === "") {
+            alert("Department name cannot be empty!");
+            return;
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'edit_department' %}",
+            data: {
+                dept_id: edit_id,
+                dept_name: name,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (response) {
+                $("#department_table").html(response.table_html);
+                $("#dept_name").val("");
+            }
+        })
+        $('#add_btn').show();
+        $('#update_btn').hide();
+    });
 </script>
 
 {% endblock %}

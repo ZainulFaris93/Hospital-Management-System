@@ -1,0 +1,82 @@
+{% extends 'admin_navbar.html' %}
+{% load static %}
+{% block content %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<title>Appointment History</title>
+
+<style>
+    #bg-card {
+        background: rgba(255,255,255,0.95);
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 100px;
+    }
+
+    table {
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    th { background: #0d6efd; color:#fff; text-align:center; }
+    td { text-align:center; }
+</style>
+
+
+<div class="container" style="min-height: 90vh;">
+    <div id="bg-card" class="shadow p-3 p-md-4">
+
+        <h2 class="text-center mb-4">Appointment History</h2>
+
+        <!-- Doctor Filter -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <select class="form-control mb-3" id="doctor_filter">
+                    <option value="">-- All Doctors --</option>
+                    {% for doc in doctors %}
+                    <option value="{{ doc.id }}">
+                        {{ doc.user.first_name }} {{ doc.user.last_name }} 
+                        ({{ doc.dep.Dept_name }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-6 text-right">
+                <button id="refresh_btn" class="btn btn-secondary">Refresh</button>
+            </div>
+        </div>
+
+        <div id="appointments_table" class="table-responsive">
+            {% include 'components/appointment_history_table.html' %}
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+    function loadHistory(doctor_id) {
+        $.ajax({
+            url: "{% url 'filter_appointment_history' %}",
+            data: { doctor_id: doctor_id },
+            success: function(response) {
+                $("#appointments_table").html(response.table_html);
+            }
+        });
+    }
+
+    $("#doctor_filter").change(function() {
+        loadHistory($(this).val());
+    });
+
+    $("#refresh_btn").click(function() {
+        $("#doctor_filter").val('');
+        loadHistory('');
+    });
+
+</script>
+
+{% endblock %}

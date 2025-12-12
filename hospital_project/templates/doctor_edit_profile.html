@@ -94,7 +94,7 @@
         {% endfor %}
     {% endif %}
 
-    <form action="{% url 'doctor_edit_profile' %}" method="POST" enctype="multipart/form-data">
+    <form action="{% url 'doctor_edit_profile' %}" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
         {% csrf_token %}
 
         <div class="text-center mb-3">
@@ -149,5 +149,29 @@
         <button class="profile-button" type="submit">Save Changes</button>
     </form>
 </div>
+
+
+<script>
+    function validateForm() {
+        const phone = document.getElementById("phone").value;
+        const email = document.getElementById("email").value;
+        
+        // Phone: exactly 10 digits
+        const phonePattern = /^[0-9]{10}$/;
+        if (!phonePattern.test(phone)) {
+            alert("Phone number must be exactly 10 digits.");
+            return false;
+        }
+
+        // Email validation (Gmail only)
+        const emailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+        if (!emailPattern.test(email)) {
+            alert("Enter a valid Gmail address.");
+            return false;
+        }
+        return true;
+    }
+
+</script>
 
 {% endblock %}
