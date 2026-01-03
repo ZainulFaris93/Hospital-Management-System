@@ -111,11 +111,12 @@
                 <label>Select Date</label>
                 <input type="date" name="date" id="datePicker" class="form-control" required>
             </div>
-            
+            <div id="dateMessage" class="alert alert-warning d-none"></div>
+
             <!-- Time Slot -->
             <div class="form-group">
                 <label>Select Time Slot</label>
-                <select name="time" class="custom-select" required>
+                <select name="time" id="timeSlot" class="custom-select" required>
                     <option value="">-- Select Time Slot --</option>
                     <option value="09:00 AM - 10:00 AM">09:00 AM - 10:00 AM</option>
                     <option value="10:00 AM - 11:00 AM">10:00 AM - 11:00 AM</option>
@@ -123,6 +124,11 @@
                     <option value="02:00 PM - 03:00 PM">02:00 PM - 03:00 PM</option>
                     <option value="03:00 PM - 04:00 PM">03:00 PM - 04:00 PM</option>
                 </select>
+            </div>
+
+            <div class="form-group">
+                <label>Description</label><br>
+                <textarea name="desc" id="" placeholder="Details About The Appointment" style="width: 100%; border-radius: 10px; height: 78px; font-size: 15px; padding: 10px;"></textarea>
             </div>
 
             <!-- Submit Button -->
@@ -134,11 +140,8 @@
     </div>
 </div>
 
-
-<!-- FontAwesome -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
 
-<!-- JS: Disable past dates -->
 <script>
     let today = new Date().toISOString().split('T')[0];
     document.getElementById("datePicker").setAttribute("min", today);
@@ -161,5 +164,65 @@
             });
     });
 </script>
+
+<script>
+function checkAvailability() {
+    let doctor = document.getElementById("doctor").value;
+    let date = document.getElementById("datePicker").value;
+
+    if (!doctor || !date) return;
+
+    fetch(`/check-day-availability/${doctor}/${date}/`)
+        .then(res => res.json())
+        .then(data => {
+            let msgBox = document.getElementById("dateMessage");
+
+            if (data.full) {
+                msgBox.classList.remove("d-none");
+                msgBox.innerHTML =
+                    `All time slots are booked for this date. 
+                     Next available date is <b>${data.next_date}</b>.`;
+            } else {
+                msgBox.classList.add("d-none");
+            }
+        });
+}
+
+document.getElementById("doctor").addEventListener("change", checkAvailability);
+document.getElementById("datePicker").addEventListener("change", checkAvailability);
+</script>
+
+
+<script>
+function loadBookedSlots() {
+    let doctorId = document.getElementById("doctor").value;
+    let date = document.getElementById("datePicker").value;
+
+    if (!doctorId || !date) return;
+
+    fetch(`/get-booked-times/${doctorId}/${date}/`)
+        .then(response => response.json())
+        .then(data => {
+            let booked = data.booked_times;
+            let select = document.getElementById("timeSlot");
+
+            // Reset options
+            for (let option of select.options) {
+                option.disabled = false;
+            }
+
+            // Disable booked ones
+            for (let option of select.options) {
+                if (booked.includes(option.value)) {
+                    option.disabled = true;
+                }
+            }
+        });
+}
+
+document.getElementById("doctor").addEventListener("change", loadBookedSlots);
+document.getElementById("datePicker").addEventListener("change", loadBookedSlots);
+</script>
+
 
 {% endblock %}

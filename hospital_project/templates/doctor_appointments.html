@@ -80,20 +80,35 @@
     </div>
 </div>
 
-
 <script>
 function updateStatus(appId, action) {
     $.ajax({
         url: "{% url 'ajax_update_status' %}",
-        method: "POST",
+        type: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
         data: {
             appointment_id: appId,
-            status: action,
-            csrfmiddlewaretoken: "{{ csrf_token }}"
+            status: action
         },
         success: function (res) {
-            $("#row-" + appId).html(res.row_html);
-        }
+            if (res.success) {
+                const row = document.getElementById("row-" + res.appointment_id);
+                if (row) row.remove();
+
+                const tbody = document.getElementById("appointments-body");
+                if (tbody.children.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                No upcoming appointments.
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+        },
     });
 }
 
@@ -105,5 +120,13 @@ $(document).on("click", ".notconsult-btn", function () {
     updateStatus($(this).data("id"), "not_consulted");
 });
 </script>
+
+<script>
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+</script>
+
+
 
 {% endblock %}

@@ -34,13 +34,11 @@
     td { vertical-align: middle; text-align:center; }
 
     @media (max-width: 768px) {
-        /* Reduce padding for small screens */
         table th, table td {
             padding: 8px 6px;
             font-size: 13px;
         }
 
-        /* Stack buttons */
         .btn-sm {
             display: block;
             width: 100%;
@@ -59,7 +57,6 @@
 
         <h2 class="text-center mb-4">Appointment Requests (Pending)</h2>
 
-        <!-- Filter by doctor -->
         <div class="row mb-3">
             <div class="col-md-6">
                 <select class="form-control mb-3" id="doctor_filter">
@@ -74,7 +71,6 @@
             </div>
         </div>
 
-        <!-- Appointment table loads here -->
         <div id="appointments_table">
             {% include 'components/appointments_table.html' %}
         </div>
@@ -84,7 +80,6 @@
 
 
 <script>
-    // helper to fetch filtered appointments and replace table
     function loadAppointments(doctor_id) {
         $.ajax({
             url: "{% url 'filter_appointments' %}",
@@ -92,25 +87,20 @@
             success: function(response) {
                 $("#appointments_table").html(response.table_html);
             },
-            error: function() {
-                alert("Failed to load appointments. Try again.");
-            }
+            
         });
     }
 
-    // filter change
     $("#doctor_filter").change(function() {
         const docId = $(this).val();
         loadAppointments(docId);
     });
 
-    // refresh button (reload all pending)
     $("#refresh_btn").click(function() {
         $("#doctor_filter").val('');
         loadAppointments('');
     });
 
-    // approve/reject handlers use delegated events because buttons are re-rendered
     $(document).on('click', '.approve-btn', function() {
         const appointmentId = $(this).data('id');
         if (!confirm("Approve this appointment?")) return;

@@ -38,8 +38,10 @@
         </div>
     {% endif %}
     <div id="bg-card" class="shadow">
-
+        
+        
         <h2 class="text-center mb-4">Manage Departments</h2>
+        <div id="ajax-alert"></div>
 
         <div class="row mb-4">
             <div class="col-md-8 mb-3">
@@ -129,6 +131,12 @@
             success: function (response) {
                 $("#department_table").html(response.table_html);
                 $("#dept_name").val("");
+                $("#ajax-alert").html(`
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        ${response.message}
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    </div>
+                `);
             }
         })
         $('#add_btn').show();

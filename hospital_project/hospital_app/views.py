@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.contrib.auth import update_session_auth_hash
 import datetime
+from datetime import timedelta
 from django.utils.dateparse import parse_date
 
 # Create your views here.
@@ -38,8 +39,11 @@ def patient_signup_function(request):
         address = request.POST['address']
         mail=request.POST['mail']
         us=request.POST['patient']
-        if CustomUser.objects.filter(username=uname).exists() or CustomUser.objects.filter(email=mail).exists():
-            messages.error(request,'Username or email already exists')
+        if CustomUser.objects.filter(username=uname).exists():
+            messages.error(request,'Username already exists')
+            return redirect('patient_signup')
+        elif CustomUser.objects.filter(email=mail).exists():
+            messages.error(request,'Email already exists')
             return redirect('patient_signup')
         elif Patient.objects.filter(Phone_number = phone).exists():
             messages.error(request,'Phone Number already exists')
@@ -73,8 +77,11 @@ def doctor_signup_function(request):
         d=Department.objects.get(id=d_id)
         prof = request.FILES.get('profile')
         us=request.POST['doc']
-        if CustomUser.objects.filter(username=uname).exists() or CustomUser.objects.filter(email=mail).exists():
+        if CustomUser.objects.filter(username=uname).exists():
             messages.error(request,'Username or email already exists')
+            return redirect('doctor_signup')
+        elif CustomUser.objects.filter(email=mail).exists():
+            messages.error(request,'Email already exists')
             return redirect('doctor_signup')
         elif Doctor.objects.filter(Phone_number = phone).exists():
             messages.error(request,'Phone Number already exists')
@@ -358,13 +365,23 @@ def edit_department(request):
         dept_id = request.POST.get("dept_id")
         name = request.POST.get("dept_name").strip()
 
-        if name != "":
-            dep = Department.objects.get(id=dept_id)
-            dep.Dept_name = name
-            dep.save()
+        dep = Department.objects.get(id=dept_id)
+        dep.Dept_name = name
+        dep.save()
+
         departments = Department.objects.all().order_by("id")
-        table_html = render_to_string("components/department_table.html", {"departments": departments})
-        return JsonResponse({"table_html": table_html})
+        table_html = render_to_string(
+            "components/department_table.html",
+            {"departments": departments},
+            request=request
+        )
+
+        return JsonResponse({
+            "success": True,
+            "message": "Department name updated successfully",
+            "table_html": table_html
+        })
+
 
         
 
@@ -426,7 +443,7 @@ def update_appointment_status(request):
 @login_required(login_url='login_page')
 def admin_appointment_history(request):
     # History = Disapproved, Consulted, Not Consulted
-    appointments = Appointment.objects.filter(status__in=[2, 3, 4]).order_by('-date')
+    appointments = Appointment.objects.filter(status__in=[1, 2, 3, 4]).order_by('-date')
 
     doctors = Doctor.objects.filter(status=1).select_related('user', 'dep')
 
@@ -438,7 +455,7 @@ def admin_appointment_history(request):
 def filter_appointment_history(request):
     doctor_id = request.GET.get('doctor_id')
 
-    qs = Appointment.objects.filter(status__in=[2, 3, 4]).order_by('-date')
+    qs = Appointment.objects.filter(status__in=[1, 2, 3, 4]).order_by('-date')
 
     if doctor_id:
         qs = qs.filter(doctor_id=doctor_id)
@@ -449,6 +466,22 @@ def filter_appointment_history(request):
     )
     return JsonResponse({"table_html": table_html})
 
+def search_appointment_history(request):
+    pat_name = request.GET.get('pat_name')
+
+    qs = Appointment.objects.filter(status__in=[1, 2, 3, 4]).order_by('-date')
+
+    if pat_name:
+        qs = qs.filter(
+            Q(patient__user__first_name__icontains = pat_name) |
+            Q(patient__user__last_name__icontains = pat_name)
+        )
+
+    table_html = render_to_string(
+        "components/appointment_history_table.html",
+        {"appointments": qs}
+    )
+    return JsonResponse({"table_html": table_html})
 
 @login_required(login_url='login_page')
 def admin_reset_password(request):
@@ -495,6 +528,29 @@ def reset_password_function(request):
 
     return render(request, 'admin_reset_password.html')
 
+def admin_edit_profile(request):
+    user = request.user
+    if request.method == "POST":
+        email = request.POST.get("email")
+        uname = request.POST.get("uname")
+        for i in CustomUser.objects.exclude(id = user.id):
+            if i.username == uname:
+                messages.error(request, "Username already exists!")
+                return redirect("admin_edit_profile")
+            
+            if i.email == email:
+                messages.error(request, "email already exists!")
+                return redirect("admin_edit_profile")
+        
+        user.email = email
+        user.username = uname
+        user.save()
+
+        messages.success(request, "Profile updated successfully!")
+        return redirect("admin_edit_profile")
+    return render(request, 'admin_edit_profile.html', {'ad':user})
+
+# --------------------------------------------------------------------------------------------------------------------------
 
 def doctor_appointment_count(request):
     doctor = Doctor.objects.get(user=request.user)
@@ -502,14 +558,11 @@ def doctor_appointment_count(request):
     count = Appointment.objects.filter(
         doctor=doctor,
         status=1,  # approved appointments
-        date__gte=datetime.date.today()
+        date__gte=date.today()
     ).count()
 
     return JsonResponse({"count": count})
 
-
-
-# --------------------------------------------------------------------------------------------------------------------------
 
 @login_required(login_url='login_page')
 def doctor_home(request):
@@ -547,7 +600,8 @@ def doctor_appointments(request):
 
     appointments = Appointment.objects.filter(
         doctor=doctor,
-        status=1   # Approved
+        status=1,
+        date__gte=date.today()    
     ).order_by("date", "time")
 
     return render(request, "doctor_appointments.html", {
@@ -555,43 +609,48 @@ def doctor_appointments(request):
     })
 
 
-
+@login_required
 def ajax_update_status(request):
     if request.method == "POST":
         app_id = request.POST.get("appointment_id")
         action = request.POST.get("status")
 
-        appointment = get_object_or_404(Appointment, id=app_id)
+        appointment = get_object_or_404(
+            Appointment,
+            id=app_id,
+            doctor__user=request.user
+        )
 
-        # Security check
-        if appointment.doctor.user != request.user:
-            return JsonResponse({"error": "Unauthorized"}, status=403)
+        if appointment.date < date.today():
+            return JsonResponse({"error": "Past appointment"}, status=400)
 
-        # Update the status
+        if appointment.status != 1:
+            return JsonResponse({"error": "Already updated"}, status=400)
+
         if action == "consulted":
             appointment.status = 3
         elif action == "not_consulted":
             appointment.status = 4
+        else:
+            return JsonResponse({"error": "Invalid action"}, status=400)
 
-        appointment.save()
+        appointment.save(update_fields=["status"])
 
-        # Render updated row
-        row_html = render_to_string("components/doctor_appointments_row.html", {
-            "app": appointment,
-            "forloop": {"counter": 0}   # not used but required
+        return JsonResponse({
+            "success": True,
+            "appointment_id": appointment.id
         })
-
-        return JsonResponse({"row_html": row_html})
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
 @login_required(login_url='login_page')
 def doctor_view_appointment(request, id):
-    appointment = get_object_or_404(Appointment, id=id)
-
-    if appointment.doctor.user != request.user:
-        return redirect('doctor_appointments')
+    appointment = get_object_or_404(
+        Appointment,
+        id=id,
+        doctor__user=request.user
+    )
 
     return render(request, "doctor_appointment_view.html", {
         "appointment": appointment
@@ -670,18 +729,38 @@ def doctor_edit_profile(request):
     if request.method == "POST":
         user = request.user
 
-        user.first_name = request.POST.get("fname")
-        user.last_name = request.POST.get("lname")
-        user.email = request.POST.get("email")
-        user.save()
+        first_name = request.POST.get("fname")
+        last_name = request.POST.get("lname")
+        email = request.POST.get("email")
+        uname = request.POST.get("uname")
+        for i in CustomUser.objects.exclude(id=doctor.user.id):
+            if i.username == uname:
+                messages.error(request, "Username already exists!")
+                return redirect("doctor_edit_profile")
+            
+            if i.email == email:
+                messages.error(request, "email already exists!")
+                return redirect("doctor_edit_profile")
+        
+        user.first_name = first_name
+        user.last_name = last_name
+        user.email = email
+        user.username = uname
+        
 
+        Phone = request.POST.get("phone")
+        for i in Doctor.objects.exclude(id=doctor.id):
+            if i.Phone_number == Phone:
+                messages.error(request, "Phone Number already exists!")
+                return redirect("doctor_edit_profile")
         doctor.Address = request.POST.get("address")
-        doctor.Phone_number = request.POST.get("phone")
+        doctor.Phone_number = Phone
         doctor.dep_id = request.POST.get("dpt")
 
         if request.FILES.get("profile"):
             doctor.Profile = request.FILES["profile"]
 
+        user.save()
         doctor.save()
 
         messages.success(request, "Profile updated successfully!")
@@ -714,6 +793,45 @@ def load_doctors(request, dep_id):
     data = [{"id": d.id, "name": d.user.first_name} for d in doctors]
     return JsonResponse({"doctors": data})
 
+def check_day_availability(request, doctor_id, date):
+    selected_date = parse_date(date)
+
+    count = Appointment.objects.filter(
+        doctor_id=doctor_id,
+        date=selected_date
+    ).count()
+
+    # If full, find next available date
+    if count >= 5:
+        next_date = selected_date + timedelta(days=1)
+
+        while Appointment.objects.filter(
+            doctor_id=doctor_id,
+            date=next_date
+        ).count() >= 5:
+            next_date += timedelta(days=1)
+
+        return JsonResponse({
+            "full": True,
+            "next_date": next_date
+        })
+
+    return JsonResponse({"full": False})
+
+def get_next_available_date(doctor, start_date):
+    check_date = start_date + timedelta(days=1)
+
+    while True:
+        count = Appointment.objects.filter(
+            doctor=doctor,
+            date=check_date
+        ).count()
+
+        if count < 5:
+            return check_date
+
+        check_date += timedelta(days=1)
+
 @login_required(login_url='login_page')
 def save_appointment(request):
     if request.method == "POST":
@@ -721,6 +839,7 @@ def save_appointment(request):
         doctor_id = request.POST['doctor']
         date_selected = request.POST['date']
         time_slot = request.POST['time']
+        desc = request.POST['desc']
 
         patient = Patient.objects.get(user=request.user)
         dept = Department.objects.get(id=dep_id)
@@ -734,8 +853,14 @@ def save_appointment(request):
         ).count()
 
         if appointment_count >= 5:
-            messages.error(request, "This doctor already has 5 appointments on this date.")
+            next_date = get_next_available_date(doctor, date_parsed)
+            # messages.error(
+            #     request,
+            #     f"All time slots are booked for {date_parsed}. "
+            #     f"Next available date is {next_date}."
+            # )
             return redirect('patient_book_appointment')
+
 
         # Check if time slot already booked
         if Appointment.objects.filter(doctor=doctor, date=date_parsed, time=time_slot).exists():
@@ -749,12 +874,22 @@ def save_appointment(request):
             dept=dept,
             date=date_parsed,
             time=time_slot,
+            Description = desc,
             status=0
         )
 
         messages.success(request, "Appointment booked successfully!")
         return redirect("patient_book_appointment")
 
+def get_booked_times(request, doctor_id, date):
+    booked_times = Appointment.objects.filter(
+        doctor_id=doctor_id,
+        date=date
+    ).values_list('time', flat=True)
+
+    return JsonResponse({
+        "booked_times": list(booked_times)
+    })
 
 @login_required(login_url='login_page')
 def patient_appointment_history(request):
@@ -773,15 +908,35 @@ def patient_edit_profile(request):
         user = request.user
 
         # Update User model fields
-        user.first_name = request.POST.get("fname")
-        user.last_name = request.POST.get("lname")
-        user.email = request.POST.get("email")
-        user.save()
+        first_name = request.POST.get("fname")
+        last_name = request.POST.get("lname")
+        email = request.POST.get("email")
+        uname = request.POST.get("uname")
+        for i in CustomUser.objects.exclude(id=patient.user.id):
+            if i.username == uname:
+                messages.error(request, "Username already exists!")
+                return redirect("patient_edit_profile")
+            
+            if i.email == email:
+                messages.error(request, "email already exists!")
+                return redirect("patient_edit_profile")
+        
+        user.first_name = first_name
+        user.last_name = last_name
+        user.email = email
+        user.username = uname
+        
 
         # Update Patient model fields
+        Phone = request.POST.get("phone")
+        for i in Patient.objects.exclude(id=patient.id):
+            if i.Phone_number == Phone:
+                messages.error(request, "Phone Number already exists!")
+                return redirect("patient_edit_profile")
         patient.Address = request.POST.get("address")
         patient.age = request.POST.get("age")
-        patient.Phone_number = request.POST.get("phone")
+        patient.Phone_number = Phone
+        user.save()
         patient.save()
 
         messages.success(request, "Profile updated successfully!")

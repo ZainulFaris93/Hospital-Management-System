@@ -1,7 +1,8 @@
+
 <table class="table table-bordered table-hover">
     <thead>
         <tr>
-            <th>ID</th>
+            <th>#</th>
             <th>Department Name</th>
             <th>Actions</th>
         </tr>
@@ -10,7 +11,7 @@
         {% if departments %}
             {% for d in departments %}
             <tr>
-                <td>{{ d.id }}</td>
+                <td>{{ forloop.counter }}</td>
                 <td>{{ d.Dept_name }}</td>
                 <td>
                     <button onclick="editDepartment({{ d.id }})" class="btn btn-primary btn-sm">

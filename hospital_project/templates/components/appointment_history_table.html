@@ -15,7 +15,8 @@
             <tr>
 
                 <td>
-                    {{ app.patient.user.first_name }} {{ app.patient.user.last_name }}
+                    {{ app.patient.user.first_name }} {{ app.patient.user.last_name }}<br>
+                    <small class="text-muted">{{ app.patient.p_id }}</small>
                 </td>
 
                 <td>
@@ -28,7 +29,10 @@
                 <td>{{ app.time }}</td>
 
                 <td>
-                    {% if app.status == 2 %}
+                    {% if app.status == 1 %}
+                        <span class="badge bg-primary">Pending <br> Consultaion</span>
+
+                    {% elif app.status == 2 %}
                         <span class="badge bg-danger">Disapproved</span>
 
                     {% elif app.status == 3 %}
@@ -36,9 +40,6 @@
 
                     {% elif app.status == 4 %}
                         <span class="badge bg-warning text-dark">Not Consulted</span>
-
-                    {% else %}
-                        <span class="badge bg-secondary">Unknown</span>
                     {% endif %}
                 </td>
             </tr>

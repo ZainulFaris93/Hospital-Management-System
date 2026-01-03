@@ -38,8 +38,10 @@ urlpatterns = [
     path('update_appointment_status/', views.update_appointment_status, name='update_appointment_status'),
     path('admin_appointment_history/', views.admin_appointment_history, name='admin_appointment_history'),
     path('filter_appointment_history/', views.filter_appointment_history, name='filter_appointment_history'),
+    path('search_appointment_history/', views.search_appointment_history, name='search_appointment_history'),
     path('admin_reset_password/', views.admin_reset_password, name='admin_reset_password'),
     path('admin_reset_password_function/', views.reset_password_function, name='admin_reset_password_function'),
+    path("admin_edit_profile/", views.admin_edit_profile, name="admin_edit_profile"),
 
 
 
@@ -58,6 +60,8 @@ urlpatterns = [
     path('patient_book_appointment/', views.patient_book_appointment, name="patient_book_appointment"),
     path('save_appointment/', views.save_appointment, name="save_appointment"),
     path('load-doctors/<int:dep_id>/', views.load_doctors, name="load_doctors"),
+    path('check-day-availability/<int:doctor_id>/<str:date>/',views.check_day_availability,name='check_day_availability'),
+    path('get-booked-times/<int:doctor_id>/<str:date>/',views.get_booked_times,name='get_booked_times'),
     path('patient_appointment_history/', views.patient_appointment_history, name="patient_appointment_history"),
     path("patient_edit_profile/", views.patient_edit_profile, name="patient_edit_profile"),
     path('patient_reset_password/', views.patient_reset_password, name= 'patient_reset_password'),

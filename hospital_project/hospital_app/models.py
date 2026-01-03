@@ -34,6 +34,7 @@ class Appointment(models.Model):
     dept = models.ForeignKey(Department, on_delete=models.CASCADE, null=True)
     date = models.DateField(default=date.today)
     time = models.CharField(max_length=50, null=True)
+    Description = models.CharField(max_length=100, null = True)
 
     # Status:
     # 0 = Pending (waiting for doctor approval)
