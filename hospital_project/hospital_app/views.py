@@ -11,7 +11,6 @@ from django.contrib.auth.decorators import login_required
 from datetime import date
 from django.http import JsonResponse
 from django.template.loader import render_to_string
-from django.contrib.auth import update_session_auth_hash
 import datetime
 from datetime import timedelta
 from django.utils.dateparse import parse_date
@@ -45,7 +44,7 @@ def patient_signup_function(request):
         elif CustomUser.objects.filter(email=mail).exists():
             messages.error(request,'Email already exists')
             return redirect('patient_signup')
-        elif Patient.objects.filter(Phone_number = phone).exists():
+        elif Doctor.objects.filter(Phone_number = phone).exists() or Patient.objects.filter(Phone_number = phone).exists():
             messages.error(request,'Phone Number already exists')
             return redirect('patient_signup')
         else:
@@ -55,8 +54,8 @@ def patient_signup_function(request):
             user.save()
             tea=Patient(p_id=p_id,age=age,Phone_number=phone,Address=address,user=user)
             tea.save()
-            subject='Regsitration Successful'
-            message='Patient ID:'+str(p_id)+"\n"+'username:'+str(uname)+"\n"+'password:'+str(pas)+"\n"+'email:'+str(mail)
+            subject='Patient Regsitration Successful'
+            message='Patient ID: '+str(p_id)+"\n"+'username: '+str(uname)+"\n"+'password: '+str(pas)+"\n"+'email: '+str(mail)
             send_mail(subject,message,settings.EMAIL_HOST_USER,{mail})
             messages.success(request,'User registration success.Please Check Your E-mail for Login Credentials..')
             return redirect('login_page')
@@ -78,12 +77,12 @@ def doctor_signup_function(request):
         prof = request.FILES.get('profile')
         us=request.POST['doc']
         if CustomUser.objects.filter(username=uname).exists():
-            messages.error(request,'Username or email already exists')
+            messages.error(request,'Username already exists')
             return redirect('doctor_signup')
         elif CustomUser.objects.filter(email=mail).exists():
             messages.error(request,'Email already exists')
             return redirect('doctor_signup')
-        elif Doctor.objects.filter(Phone_number = phone).exists():
+        elif Doctor.objects.filter(Phone_number = phone).exists() or Patient.objects.filter(Phone_number = phone).exists():
             messages.error(request,'Phone Number already exists')
             return redirect('doctor_signup')
         else:
@@ -91,7 +90,7 @@ def doctor_signup_function(request):
             user.save()
             tea=Doctor(Phone_number=phone,user=user,Address=address,Profile=prof,dep=d)
             tea.save()
-            subject='Regsitration confirmation'
+            subject='Doctor Regsitration confirmation'
             message='Registration is success ,please wait for admin approval...'
             send_mail(subject,"Hello "+uname+' '+message,settings.EMAIL_HOST_USER,[mail])
             messages.success(request,'User registration success.Please wait for admin approval..')
@@ -247,10 +246,13 @@ def admin_add_doc(request):
         d=Department.objects.get(id=d_id)
         prof = request.FILES.get('profile')
         us=request.POST['doc']
-        if CustomUser.objects.filter(username=uname).exists() or CustomUser.objects.filter(email=mail).exists():
-            messages.error(request,'Username or email already exists')
+        if CustomUser.objects.filter(username=uname).exists():
+            messages.error(request,'Username already exists')
             return redirect('admin_add_doc')
-        elif Doctor.objects.filter(Phone_number = phone).exists():
+        elif CustomUser.objects.filter(email=mail).exists():
+            messages.error(request,'Email already exists')
+            return redirect('admin_add_doc')
+        elif Doctor.objects.filter(Phone_number = phone).exists() or Patient.objects.filter(Phone_number = phone).exists():
             messages.error(request,'Phone Number already exists')
             return redirect('admin_add_doc')
         else:
@@ -261,7 +263,7 @@ def admin_add_doc(request):
             tea=Doctor(Phone_number=phone,user=user,Address=address,Profile=prof,dep=d, status=1)
             tea.save()
 
-            subject = 'Admin Created Your Account'
+            subject = 'Admin Created Your Account(Doctor)'
             message = f"Username: {user.username}\nPassword: {password}\nEmail: {user.email}"
             send_mail(subject, message, settings.EMAIL_HOST_USER, [user.email])
 
@@ -305,10 +307,13 @@ def admin_add_patient(request):
         address = request.POST['address']
         mail=request.POST['mail']
         us=request.POST['patient']
-        if CustomUser.objects.filter(username=uname).exists() or CustomUser.objects.filter(email=mail).exists():
-            messages.error(request,'Username or email already exists')
+        if CustomUser.objects.filter(username=uname).exists():
+            messages.error(request,'Username already exists')
             return redirect('admin_add_patient')
-        elif Patient.objects.filter(Phone_number = phone).exists():
+        elif CustomUser.objects.filter(email=mail).exists():
+            messages.error(request,'Email already exists')
+            return redirect('admin_add_patient')
+        elif Doctor.objects.filter(Phone_number = phone).exists() or Patient.objects.filter(Phone_number = phone).exists():
             messages.error(request,'Phone Number already exists')
             return redirect('admin_add_patient')
         else:
@@ -318,8 +323,8 @@ def admin_add_patient(request):
             user.save()
             tea=Patient(p_id=p_id,age=age,Phone_number=phone,Address=address,user=user)
             tea.save()
-            subject='Regsitration Successful'
-            message='username:'+str(uname)+"\n"+'password:'+str(pas)+"\n"+'email:'+str(mail)
+            subject='Patient Regsitration Successful'
+            message='Patient Id: '+str(p_id)+"\n"+'username: '+str(uname)+"\n"+'password: '+str(pas)+"\n"+'email: '+str(mail)
             send_mail(subject,message,settings.EMAIL_HOST_USER,{mail})
             messages.success(request,'Patient Registration Successful..')
             return redirect('admin_add_patient')
@@ -334,14 +339,32 @@ def admin_manage_dept(request):
 @login_required(login_url='login_page')
 def add_department(request):
     if request.method == "POST":
-        name = request.POST.get("dept_name")
+        name = request.POST.get("dept_name").strip()
 
+        if Department.objects.filter(Dept_name = name).exists():
+            departments = Department.objects.all().order_by("id")
+            table_html = render_to_string(
+                "components/department_table.html",
+                {"departments": departments},
+                request=request
+            )
+
+            return JsonResponse({
+                "success": True,
+                "message": "Department name Already exist!",
+                "table_html": table_html
+            })
+        
         if name.strip() != "":
             Department.objects.create(Dept_name=name)
 
     departments = Department.objects.all().order_by("id")
     table_html = render_to_string("components/department_table.html", {"departments": departments})
-    return JsonResponse({"table_html": table_html})
+    return JsonResponse({
+        "success": True,
+        "message": "Department added successfully!",
+        "table_html": table_html
+    })
 
 
 def delete_department(request):
@@ -365,6 +388,20 @@ def edit_department(request):
         dept_id = request.POST.get("dept_id")
         name = request.POST.get("dept_name").strip()
 
+        if Department.objects.filter(Dept_name = name).exists():
+            departments = Department.objects.all().order_by("id")
+            table_html = render_to_string(
+                "components/department_table.html",
+                {"departments": departments},
+                request=request
+            )
+
+            return JsonResponse({
+                "success": True,
+                "message": "Department name Already exist!",
+                "table_html": table_html
+            })
+        
         dep = Department.objects.get(id=dept_id)
         dep.Dept_name = name
         dep.save()
@@ -382,8 +419,6 @@ def edit_department(request):
             "table_html": table_html
         })
 
-
-        
 
 
 @login_required(login_url='login_page')
@@ -430,9 +465,8 @@ def update_appointment_status(request):
 
     app.save()
 
-    # After update, return refreshed table of pending appointments (optionally keep previous doctor filter)
-    # If client sent a doctor_id, prefer that; else return all pending
-    doctor_id = request.POST.get('doctor_id') or request.GET.get('doctor_id')
+    
+    doctor_id = request.POST.get('doctor_id')
     qs = Appointment.objects.filter(status=0).order_by('date')
     if doctor_id:
         qs = qs.filter(doctor_id=doctor_id)
@@ -442,7 +476,6 @@ def update_appointment_status(request):
 
 @login_required(login_url='login_page')
 def admin_appointment_history(request):
-    # History = Disapproved, Consulted, Not Consulted
     appointments = Appointment.objects.filter(status__in=[1, 2, 3, 4]).order_by('-date')
 
     doctors = Doctor.objects.filter(status=1).select_related('user', 'dep')
@@ -494,34 +527,26 @@ def reset_password_function(request):
         pas = request.POST['newpass']
         cpas = request.POST['confirmpass']
 
-        # Check current password
         if not request.user.check_password(current_password):
             messages.error(request, 'Current password is incorrect.')
             return redirect('admin_reset_password')
 
-        # Check match
         if pas != cpas:
             messages.error(request, 'Passwords do not match.')
             return redirect('admin_reset_password')
 
-        # Validate complexity
         if (
             len(pas) < 8 or 
             not any(char.isupper() for char in pas) or
             not any(char.isdigit() for char in pas) or
             not any(char in '!@#$%^&*()_+-=[]{}|;:,.<>?/~' for char in pas)
         ):
-            messages.error(request, 
-                'Password must be at least 8 characters, and contain an uppercase letter, a digit, and a special character.')
+            messages.error(request, 'Password must be at least 8 characters, and contain an uppercase letter, a digit, and a special character.')
             return redirect('admin_reset_password')
 
-        # Save the new password
         user = request.user
         user.set_password(pas)
         user.save()
-
-        # Prevent logout after password change
-        update_session_auth_hash(request, user)
 
         messages.success(request, 'Password reset successfully.')
         return redirect('login_page')
@@ -557,7 +582,7 @@ def doctor_appointment_count(request):
 
     count = Appointment.objects.filter(
         doctor=doctor,
-        status=1,  # approved appointments
+        status=1,
         date__gte=date.today()
     ).count()
 
@@ -578,7 +603,6 @@ def doctor_home(request):
 
     monthly_appointments = Appointment.objects.filter(doctor=doctor,date__month=date.today().month,status__in=[1, 3]).count()
 
-    # not consulted
     cancelled_appointments = Appointment.objects.filter(doctor=doctor,status=4).count()
 
     total_patients = Patient.objects.filter(appointment__doctor=doctor,appointment__status__in=[1, 3, 4]).distinct().count()
@@ -624,9 +648,6 @@ def ajax_update_status(request):
         if appointment.date < date.today():
             return JsonResponse({"error": "Past appointment"}, status=400)
 
-        if appointment.status != 1:
-            return JsonResponse({"error": "Already updated"}, status=400)
-
         if action == "consulted":
             appointment.status = 3
         elif action == "not_consulted":
@@ -661,7 +682,6 @@ def doctor_view_appointment(request, id):
 def doctor_appointment_history(request):
     doctor = Doctor.objects.get(user=request.user)
 
-    # History = Consulted OR Not Consulted
     history = Appointment.objects.filter(
         doctor=doctor,
         status__in=[3, 4]
@@ -686,17 +706,14 @@ def doctor_reset_password_function(request):
         pas = request.POST['newpass']
         cpas = request.POST['confirmpass']
 
-        # Check current password
         if not request.user.check_password(current_password):
             messages.error(request, 'Current password is incorrect.')
             return redirect('doctor_reset_password')
 
-        # Check match
         if pas != cpas:
             messages.error(request, 'Passwords do not match.')
             return redirect('doctor_reset_password')
 
-        # Validate complexity
         if (
             len(pas) < 8 or 
             not any(char.isupper() for char in pas) or
@@ -707,13 +724,10 @@ def doctor_reset_password_function(request):
                 'Password must be at least 8 characters, and contain an uppercase letter, a digit, and a special character.')
             return redirect('doctor_reset_password')
 
-        # Save the new password
         user = request.user
         user.set_password(pas)
         user.save()
 
-        # Prevent logout after password change
-        update_session_auth_hash(request, user)
 
         messages.success(request, 'Password reset successfully.')
         return redirect('login_page')
@@ -789,19 +803,25 @@ def patient_book_appointment(request):
 
 
 def load_doctors(request, dep_id):
-    doctors = Doctor.objects.filter(dep_id=dep_id, status=1)  # only approved doctors
+    doctors = Doctor.objects.filter(dep_id=dep_id, status=1)
     data = [{"id": d.id, "name": d.user.first_name} for d in doctors]
     return JsonResponse({"doctors": data})
 
 def check_day_availability(request, doctor_id, date):
     selected_date = parse_date(date)
+    pat = Patient.objects.get(user=request.user)
 
     count = Appointment.objects.filter(
         doctor_id=doctor_id,
         date=selected_date
     ).count()
 
-    # If full, find next available date
+    pat_count = Appointment.objects.filter(
+        doctor_id=doctor_id,
+        date=selected_date,
+        patient = pat
+    ).count()
+
     if count >= 5:
         next_date = selected_date + timedelta(days=1)
 
@@ -815,22 +835,24 @@ def check_day_availability(request, doctor_id, date):
             "full": True,
             "next_date": next_date
         })
+    
+    if pat_count >= 1:
+        next_date = selected_date + timedelta(days=1)
 
-    return JsonResponse({"full": False})
+        while Appointment.objects.filter(
+            doctor_id=doctor_id,
+            patient = pat,
+            date=next_date
+        ).count() >= 1:
+            next_date += timedelta(days=1)
 
-def get_next_available_date(doctor, start_date):
-    check_date = start_date + timedelta(days=1)
+        return JsonResponse({
+            "exist": True,
+            "next_date": next_date
+        })
+    
+    return JsonResponse({"full": False, "exist": False})
 
-    while True:
-        count = Appointment.objects.filter(
-            doctor=doctor,
-            date=check_date
-        ).count()
-
-        if count < 5:
-            return check_date
-
-        check_date += timedelta(days=1)
 
 @login_required(login_url='login_page')
 def save_appointment(request):
@@ -846,28 +868,22 @@ def save_appointment(request):
         doctor = Doctor.objects.get(id=doctor_id)
         date_parsed = parse_date(date_selected)
 
-        # Check max 5 per day
         appointment_count = Appointment.objects.filter(
             doctor=doctor,
             date=date_parsed
         ).count()
 
         if appointment_count >= 5:
-            next_date = get_next_available_date(doctor, date_parsed)
-            # messages.error(
-            #     request,
-            #     f"All time slots are booked for {date_parsed}. "
-            #     f"Next available date is {next_date}."
-            # )
             return redirect('patient_book_appointment')
 
+        # if Appointment.objects.filter(doctor=doctor,date=date_parsed,patient = request.user).count() >= 1:
+        #     return redirect('patient_book_appointment')
 
-        # Check if time slot already booked
         if Appointment.objects.filter(doctor=doctor, date=date_parsed, time=time_slot).exists():
             messages.error(request, "This time slot is already booked for this doctor.")
             return redirect('patient_book_appointment')
+        
 
-        # Save appointment
         Appointment.objects.create(
             patient=patient,
             doctor=doctor,
@@ -985,8 +1001,6 @@ def patient_reset_password_function(request):
         user.set_password(pas)
         user.save()
 
-        # Prevent logout after password change
-        update_session_auth_hash(request, user)
 
         messages.success(request, 'Password reset successfully.')
         return redirect('login_page')

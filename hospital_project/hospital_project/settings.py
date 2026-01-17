@@ -134,8 +134,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 EMAIL_HOST='smtp.gmail.com' 
 EMAIL_USE_TLS=True
 EMAIL_PORT=587
-EMAIL_HOST_USER='zainulfaris40@gmail.com'
-EMAIL_HOST_PASSWORD='ccld yafs wsaf scmc'
+EMAIL_HOST_USER='zainulfarisvk@gmail.com'
+EMAIL_HOST_PASSWORD=''
 
 
 AUTH_USER_MODEL = 'hospital_app.CustomUser'

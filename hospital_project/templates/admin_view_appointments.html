@@ -103,12 +103,14 @@
 
     $(document).on('click', '.approve-btn', function() {
         const appointmentId = $(this).data('id');
+        const doctorId = $(this).data('doctor');
         if (!confirm("Approve this appointment?")) return;
 
         $.ajax({
             url: "{% url 'update_appointment_status' %}",
             method: "POST",
             data: {
+                doctor_id: doctorId,
                 appointment_id: appointmentId,
                 action: "approve",
                 csrfmiddlewaretoken: "{{ csrf_token }}"
@@ -122,12 +124,14 @@
 
     $(document).on('click', '.reject-btn', function() {
         const appointmentId = $(this).data('id');
+        const doctorId = $(this).data('doctor');
         if (!confirm("Reject this appointment?")) return;
 
         $.ajax({
             url: "{% url 'update_appointment_status' %}",
             method: "POST",
             data: {
+                doctor_id: doctorId,
                 appointment_id: appointmentId,
                 action: "reject",
                 csrfmiddlewaretoken: "{{ csrf_token }}"

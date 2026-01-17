@@ -30,8 +30,8 @@
 
                     <td>
                         {% if app.status == 0 %}
-                            <button class="btn btn-success btn-sm approve-btn" data-id="{{ app.id }}">Approve</button>
-                            <button class="btn btn-danger btn-sm reject-btn" data-id="{{ app.id }}">Reject</button>
+                            <button class="btn btn-success btn-sm approve-btn" data-id="{{ app.id }}" data-doctor="{{ app.doctor.id }}">Approve</button>
+                            <button class="btn btn-danger btn-sm reject-btn" data-id="{{ app.id }}" data-doctor="{{ app.doctor.id }}">Reject</button>
                         {% elif app.status == 1 %}
                             <button class="btn btn-info btn-sm" disabled>Approved</button>
                         {% elif app.status == 2 %}
