@@ -21,12 +21,32 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-lyhs+mrh3y*k!@ar_o5ae6i&2$itp_o#97*gyw64m59966v(j4'
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-lyhs+mrh3y*k!@ar_o5ae6i&2$itp_o#97*gyw64m59966v(j4',  # local dev only
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Running on Render? (Render sets RENDER=true automatically)
+ON_RENDER = os.environ.get('RENDER') == 'true'
 
-ALLOWED_HOSTS = []
+DEBUG = os.environ.get('DEBUG', 'False' if ON_RENDER else 'True') == 'True'
+
+# Demo mode: shows demo logins on the login page and shows generated
+# passwords on screen instead of relying on email.
+DEMO_MODE = os.environ.get('DEMO_MODE', 'False') == 'True'
+
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+CSRF_TRUSTED_ORIGINS = []
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    CSRF_TRUSTED_ORIGINS.append('https://' + RENDER_EXTERNAL_HOSTNAME)
+
+if ON_RENDER:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 
 # Application definition
@@ -43,6 +63,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -63,6 +84,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'hospital_app.context_processors.demo_mode',
             ],
         },
     },
@@ -74,7 +96,17 @@ WSGI_APPLICATION = 'hospital_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
+# Local development uses MySQL. On Render (or with USE_SQLITE=True) the app
+# uses SQLite, seeded with demo data on every start.
+if ON_RENDER or os.environ.get('USE_SQLITE') == 'True':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+else:
+  DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'hospital_db',
@@ -83,7 +115,7 @@ DATABASES = {
         'HOST': 'localhost',
         'PORT': '3306',
     }
-}
+  }
 
 
 # Password validation
@@ -122,6 +154,11 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR,'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
+}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -135,7 +172,11 @@ EMAIL_HOST='smtp.gmail.com'
 EMAIL_USE_TLS=True
 EMAIL_PORT=587
 EMAIL_HOST_USER='zainulfarisvk@gmail.com'
-EMAIL_HOST_PASSWORD=''
+EMAIL_HOST_PASSWORD=os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+# Without an email password, print emails to the server log instead of failing.
+if not EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 
 AUTH_USER_MODEL = 'hospital_app.CustomUser'
