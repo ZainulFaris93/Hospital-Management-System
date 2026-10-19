@@ -2,11 +2,12 @@
 
 [![Tests](https://github.com/ZainulFaris93/Hospital-Management-System/actions/workflows/tests.yml/badge.svg)](https://github.com/ZainulFaris93/Hospital-Management-System/actions/workflows/tests.yml)
 [![Live demo](https://img.shields.io/badge/demo-live-2ea44f)](https://starcare-hospital.onrender.com/login_page)
-[![Test report](https://img.shields.io/badge/test%20report-Playwright-45ba4b)](https://zainulfaris93.github.io/Hospital-Management-System/)
 
 A role-based hospital management web app built with **Python and Django**. Patients book appointments, doctors manage their schedules, and admins run the hospital.
 
 **Live demo:** https://starcare-hospital.onrender.com/login_page
+
+> The automated tests, CI and deployment setup were added with help from an AI assistant. See [Automated tests](#automated-tests-added-with-ai-assistance) below.
 
 | Role    | Username   | Password      |
 |---------|------------|---------------|
@@ -18,38 +19,38 @@ On the login page, click a role to fill in its credentials. The demo runs on Ren
 
 ## Features
 
-- **Three roles, three dashboards:** admin, doctor and patient, each with its own login and role-based access control
+- **Three roles, three dashboards:** admin, doctor and patient, each with its own login
 - **Appointment booking** with time-slot selection, double-booking prevention, one visit per doctor per day and a daily limit per doctor
 - **Admin tools:** doctor approval, department management, add doctors and patients, filters, and searchable appointment history
 - **Doctor tools:** today's schedule, mark appointments consulted or not consulted, appointment history
 - **AJAX** for live counts and status updates without page reloads
 - **Email notifications** for registration and approvals
 
-## Testing
+## Automated tests (added with AI assistance)
+
+> **Transparency note:** I built the application itself. The automated test suites, the GitHub Actions CI pipeline, the demo data and deployment setup, and the fixes listed below were added with help from an AI assistant (Claude). I'm a manual tester by profession and I'm using these tests to learn test automation.
 
 Every push runs two test suites on GitHub Actions:
 
 | Suite | Tool | What it covers |
 |-------|------|----------------|
 | Unit & integration (34 tests) | Django `TestCase` | Login per role, role-based access, booking rules, appointment status workflow, registration emails, demo-mode protections |
-| End-to-end (39 runs) | Playwright + TypeScript | Real browser journeys on desktop and mobile: demo login, access control, and the full appointment lifecycle across all three roles (patient books → admin approves → doctor consults → patient sees history) |
+| End-to-end (39 runs) | Playwright + TypeScript | Browser journeys on desktop and mobile: demo login, access control, and the full appointment lifecycle across all three roles |
 
-The E2E suite uses the **Page Object** pattern (`e2e/pages/`) and starts the Django server on a fresh, seeded database by itself. The latest HTML report is published at **https://zainulfaris93.github.io/Hospital-Management-System/**.
+The latest Playwright report is published at https://zainulfaris93.github.io/Hospital-Management-System/.
 
-### What the tests caught
+### Issues found and fixed during that review
 
-Writing the tests surfaced real defects, which were then fixed:
-
-- **Missing authorization:** any logged-in user (and, for some URLs, anyone at all) could open admin pages, approve appointments or delete patients and doctors by visiting a URL. Every view now uses a `role_required` decorator, and the JSON endpoints return 401/403.
-- **Booking rules only enforced in the browser:** the server accepted past dates, unknown time slots, unapproved doctors and repeat bookings with the same doctor on the same day. All of these are now validated server-side.
-- **Silent failure:** booking a fully booked day redirected without any message. It now explains why.
-- **UI bug:** the "all slots are booked" warning was hidden immediately by the next `if/else` block.
-- **Timezone bug:** the earliest selectable date used UTC, so before 5:30 AM in India the picker allowed yesterday.
-- **Invalid dates** in the availability API raised a server error (500). They now return 400.
+- **Missing authorization:** some admin URLs (including delete patient/doctor) could be opened without the right role. Every view now checks the user's role, and the JSON endpoints return 401/403.
+- **Booking rules checked only in the browser:** the server now also rejects past dates, unknown time slots, unapproved doctors and repeat bookings with the same doctor on the same day.
+- **Silent failure** when booking a fully booked day. It now shows a message.
+- **"Fully booked" warning** was hidden immediately by the next `if/else` block.
+- **Timezone bug:** the earliest selectable date used UTC instead of local time.
+- **Invalid dates** in the availability API caused a 500 error. They now return 400.
 
 ## Tech stack
 
-Python · Django 5 · Django ORM · MySQL (local) / SQLite (demo) · JavaScript · AJAX · Bootstrap · Gunicorn · WhiteNoise · Playwright · TypeScript · GitHub Actions · Render
+Python · Django 5 · Django ORM · MySQL (local) / SQLite (demo) · JavaScript · AJAX · Bootstrap
 
 ## Run locally
 
