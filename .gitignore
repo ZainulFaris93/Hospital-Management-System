@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+db.sqlite3
+e2e.sqlite3
+hospital_project/staticfiles/
+
+# Playwright
+e2e/node_modules/
+e2e/playwright-report/
+e2e/test-results/
