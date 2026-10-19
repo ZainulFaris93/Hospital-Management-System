@@ -143,7 +143,9 @@
 
 
 <script>
-    let today = new Date().toISOString().split('T')[0];
+    // Local date, not UTC: toISOString() gave yesterday's date before 5:30 AM in India
+    const now = new Date();
+    let today = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
     document.getElementById("datePicker").setAttribute("min", today);
 </script>
 
@@ -181,11 +183,7 @@ function checkAvailability() {
                 msgBox.innerHTML =
                     `All time slots are booked for this date. 
                      Next available date is <b>${data.next_date}</b>.`;
-            } else {
-                msgBox.classList.add("d-none");
-            }
-
-            if (data.exist) {
+            } else if (data.exist) {
                 msgBox.classList.remove("d-none");
                 msgBox.innerHTML =
                     `You already booked for this date. 
