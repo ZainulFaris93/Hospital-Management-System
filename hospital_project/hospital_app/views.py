@@ -14,6 +14,16 @@ from django.template.loader import render_to_string
 import datetime
 from datetime import timedelta
 from django.utils.dateparse import parse_date
+from .access import ADMIN, DOCTOR, PATIENT, role_required, is_protected_demo_user
+
+MAX_APPOINTMENTS_PER_DAY = 5
+TIME_SLOTS = [
+    '09:00 AM - 10:00 AM',
+    '10:00 AM - 11:00 AM',
+    '11:00 AM - 12:00 PM',
+    '02:00 PM - 03:00 PM',
+    '03:00 PM - 04:00 PM',
+]
 
 # Create your views here.
 def home(request):
@@ -133,7 +143,7 @@ def logout_function(request):
     return redirect('login_page')
 
 
-@login_required(login_url='login_page')
+@role_required(ADMIN)
 def admin_home(request):
 
     doctor_count = Doctor.objects.count()
@@ -156,6 +166,7 @@ def admin_home(request):
     })
 
 
+@role_required(ADMIN, api=True)
 def approval_counts(request):
     doctor_count = Doctor.objects.filter(status=0).count()
     appointment_count = Appointment.objects.filter(status=0).count()
@@ -166,11 +177,12 @@ def approval_counts(request):
     })
 
 
-@login_required(login_url='login_page')
+@role_required(ADMIN)
 def admin_doc_approval(request):
     doc = Doctor.objects.select_related('user').all()
     return render(request, 'admin_doc_approval.html', {'doc': doc})
 
+@role_required(ADMIN)
 def approve(request, id):
     import random
     usr = Doctor.objects.get(id=id)
@@ -194,6 +206,7 @@ def approve(request, id):
         messages.info(request, 'Doctor approved')
     return redirect('admin_doc_approval')
 
+@role_required(ADMIN)
 def disapprove(request, id):
     usr = Doctor.objects.get(id=id)
     usr.status = 2
@@ -205,19 +218,20 @@ def disapprove(request, id):
     return redirect('admin_doc_approval')
 
 
-@login_required(login_url='login_page')
+@role_required(ADMIN)
 def admin_view_doc(request):
     docs = Doctor.objects.filter(status=1)
     departments = Department.objects.all()
     return render(request, 'admin_view_doc.html', {'docs': docs, 'departments': departments})
 
-@login_required(login_url='login_page')
+@role_required(ADMIN)
 def admin_view_doctor_details(request, id):
     doctor = Doctor.objects.get(id=id)
     return render(request, 'admin_view_doctor_details.html', {'doctor': doctor})
 
 
 
+@role_required(ADMIN, api=True)
 def filter_doctors(request):
     dep_id = request.GET.get('department_id')
 
@@ -229,16 +243,19 @@ def filter_doctors(request):
     table_html = render_to_string('components/doctor_table.html', {'docs': docs})
     return JsonResponse({'table_html': table_html})
 
-@login_required
+@role_required(ADMIN)
 def delete_doctor(request, id):
-    doctor = Doctor.objects.get(id=id)
+    doctor = get_object_or_404(Doctor, id=id)
     user = doctor.user
+    if is_protected_demo_user(user):
+        messages.error(request, "Demo accounts can't be deleted. Add a doctor yourself and delete that one.")
+        return redirect('admin_view_doc')
     doctor.delete()
     user.delete()
     messages.error(request,'Doctor Deleted Successfully')
     return redirect('admin_view_doc')
 
-@login_required(login_url='login_page')
+@role_required(ADMIN)
 def admin_add_doc(request):
     d = Department.objects.all()
     if request.method=='POST':
@@ -283,29 +300,33 @@ def admin_add_doc(request):
 
 
 
-@login_required(login_url='login_page')
+@role_required(ADMIN)
 def admin_view_patient(request):
     patients = Patient.objects.all()
     return render(request, 'admin_view_patient.html', {'patients': patients})
 
 
-@login_required(login_url='login_page')
+@role_required(ADMIN)
 def admin_view_patient_details(request, id):
     patient = Patient.objects.get(id=id)
     return render(request, 'admin_view_patient_details.html', {'patient': patient})
 
 
 
+@role_required(ADMIN)
 def delete_patient(request, id):
-    patient = Patient.objects.get(id=id)
+    patient = get_object_or_404(Patient, id=id)
     user = patient.user
+    if is_protected_demo_user(user):
+        messages.error(request, "Demo accounts can't be deleted. Add a patient yourself and delete that one.")
+        return redirect('admin_view_patient')
     patient.delete()
     user.delete()
     messages.error(request,'Patient Deleted Successfully')
     return redirect('admin_view_patient')
 
 
-@login_required(login_url='login_page')
+@role_required(ADMIN)
 def admin_add_patient(request):
     if request.method=='POST':
         fname=request.POST['fname']
@@ -343,12 +364,12 @@ def admin_add_patient(request):
     
     return render(request, 'admin_add_patient.html')
 
-@login_required(login_url='login_page') 
+@role_required(ADMIN)
 def admin_manage_dept(request):
     departments = Department.objects.all().order_by("id")
     return render(request, "admin_manage_dept.html", {"departments": departments})
 
-@login_required(login_url='login_page')
+@role_required(ADMIN, api=True)
 def add_department(request):
     if request.method == "POST":
         name = request.POST.get("dept_name").strip()
@@ -379,6 +400,7 @@ def add_department(request):
     })
 
 
+@role_required(ADMIN, api=True)
 def delete_department(request):
     if request.method == "POST":
         dep_id = request.POST.get("dept_id")
@@ -388,6 +410,7 @@ def delete_department(request):
     table_html = render_to_string("components/department_table.html", {"departments": departments})
     return JsonResponse({"table_html": table_html})
 
+@role_required(ADMIN, api=True)
 def edit_department(request):
     if request.method == "GET":
         dep_id = request.GET.get("id")
@@ -433,7 +456,7 @@ def edit_department(request):
 
 
 
-@login_required(login_url='login_page')
+@role_required(ADMIN)
 def admin_view_appointments(request):
     appointments = Appointment.objects.filter(status=0).order_by('date')
     doctors = Doctor.objects.filter(status=1).select_related('user', 'dep')
@@ -443,6 +466,7 @@ def admin_view_appointments(request):
     })
 
 
+@role_required(ADMIN, api=True)
 def filter_appointments(request):
     doctor_id = request.GET.get('doctor_id')
 
@@ -455,6 +479,7 @@ def filter_appointments(request):
 
 
 
+@role_required(ADMIN, api=True)
 def update_appointment_status(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=400)
@@ -486,7 +511,7 @@ def update_appointment_status(request):
     table_html = render_to_string('components/appointments_table.html', {'appointments': qs})
     return JsonResponse({'table_html': table_html})
 
-@login_required(login_url='login_page')
+@role_required(ADMIN)
 def admin_appointment_history(request):
     appointments = Appointment.objects.filter(status__in=[1, 2, 3, 4]).order_by('-date')
 
@@ -497,6 +522,7 @@ def admin_appointment_history(request):
         "doctors": doctors,
     })
 
+@role_required(ADMIN, api=True)
 def filter_appointment_history(request):
     doctor_id = request.GET.get('doctor_id')
 
@@ -511,6 +537,7 @@ def filter_appointment_history(request):
     )
     return JsonResponse({"table_html": table_html})
 
+@role_required(ADMIN, api=True)
 def search_appointment_history(request):
     pat_name = request.GET.get('pat_name')
 
@@ -528,13 +555,17 @@ def search_appointment_history(request):
     )
     return JsonResponse({"table_html": table_html})
 
-@login_required(login_url='login_page')
+@role_required(ADMIN)
 def admin_reset_password(request):
     return render(request, 'admin_reset_password.html')
 
 
+@role_required(ADMIN)
 def reset_password_function(request):
     if request.method == 'POST':
+        if is_protected_demo_user(request.user):
+            messages.error(request, "This is a shared demo account, so it can't be changed. Try creating your own account instead.")
+            return redirect('admin_reset_password')
         current_password = request.POST['currentpass']
         pas = request.POST['newpass']
         cpas = request.POST['confirmpass']
@@ -565,9 +596,13 @@ def reset_password_function(request):
 
     return render(request, 'admin_reset_password.html')
 
+@role_required(ADMIN)
 def admin_edit_profile(request):
     user = request.user
     if request.method == "POST":
+        if is_protected_demo_user(request.user):
+            messages.error(request, "This is a shared demo account, so it can't be changed. Try creating your own account instead.")
+            return redirect("admin_edit_profile")
         email = request.POST.get("email")
         uname = request.POST.get("uname")
         for i in CustomUser.objects.exclude(id = user.id):
@@ -589,6 +624,7 @@ def admin_edit_profile(request):
 
 # --------------------------------------------------------------------------------------------------------------------------
 
+@role_required(DOCTOR, api=True)
 def doctor_appointment_count(request):
     doctor = Doctor.objects.get(user=request.user)
 
@@ -601,7 +637,7 @@ def doctor_appointment_count(request):
     return JsonResponse({"count": count})
 
 
-@login_required(login_url='login_page')
+@role_required(DOCTOR)
 def doctor_home(request):
     doctor = Doctor.objects.get(user=request.user)
 
@@ -630,7 +666,7 @@ def doctor_home(request):
     })
 
 
-@login_required(login_url='login_page')
+@role_required(DOCTOR)
 def doctor_appointments(request):
     doctor = Doctor.objects.get(user=request.user)
 
@@ -645,7 +681,7 @@ def doctor_appointments(request):
     })
 
 
-@login_required
+@role_required(DOCTOR, api=True)
 def ajax_update_status(request):
     if request.method == "POST":
         app_id = request.POST.get("appointment_id")
@@ -677,7 +713,7 @@ def ajax_update_status(request):
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
-@login_required(login_url='login_page')
+@role_required(DOCTOR)
 def doctor_view_appointment(request, id):
     appointment = get_object_or_404(
         Appointment,
@@ -691,6 +727,7 @@ def doctor_view_appointment(request, id):
 
 
 
+@role_required(DOCTOR)
 def doctor_appointment_history(request):
     doctor = Doctor.objects.get(user=request.user)
 
@@ -706,14 +743,18 @@ def doctor_appointment_history(request):
 
 
 
-@login_required(login_url='login_page')
+@role_required(DOCTOR)
 def doctor_reset_password(request):
     return render(request, 'doctor_reset_password.html')
 
 
 
+@role_required(DOCTOR)
 def doctor_reset_password_function(request):
     if request.method == 'POST':
+        if is_protected_demo_user(request.user):
+            messages.error(request, "This is a shared demo account, so it can't be changed. Try creating your own account instead.")
+            return redirect('doctor_reset_password')
         current_password = request.POST['currentpass']
         pas = request.POST['newpass']
         cpas = request.POST['confirmpass']
@@ -747,12 +788,15 @@ def doctor_reset_password_function(request):
     return render(request, 'doctor_reset_password.html')
 
 
-@login_required(login_url='login_page')
+@role_required(DOCTOR)
 def doctor_edit_profile(request):
     doctor = Doctor.objects.get(user=request.user)
     dept = Department.objects.all()
 
     if request.method == "POST":
+        if is_protected_demo_user(request.user):
+            messages.error(request, "This is a shared demo account, so it can't be changed. Try creating your own account instead.")
+            return redirect("doctor_edit_profile")
         user = request.user
 
         first_name = request.POST.get("fname")
@@ -800,11 +844,11 @@ def doctor_edit_profile(request):
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-@login_required(login_url='login_page')
+@role_required(PATIENT)
 def patient_home(request):
     return render(request, 'patient_home.html')
 
-@login_required(login_url='login_page')
+@role_required(PATIENT)
 def patient_book_appointment(request):
     patient = Patient.objects.get(user=request.user)
     departments = Department.objects.all()
@@ -814,13 +858,17 @@ def patient_book_appointment(request):
     })
 
 
+@role_required(PATIENT, api=True)
 def load_doctors(request, dep_id):
     doctors = Doctor.objects.filter(dep_id=dep_id, status=1)
     data = [{"id": d.id, "name": d.user.first_name} for d in doctors]
     return JsonResponse({"doctors": data})
 
+@role_required(PATIENT, api=True)
 def check_day_availability(request, doctor_id, date):
     selected_date = parse_date(date)
+    if selected_date is None:
+        return JsonResponse({"error": "Invalid date"}, status=400)
     pat = Patient.objects.get(user=request.user)
 
     count = Appointment.objects.filter(
@@ -834,13 +882,13 @@ def check_day_availability(request, doctor_id, date):
         patient = pat
     ).count()
 
-    if count >= 5:
+    if count >= MAX_APPOINTMENTS_PER_DAY:
         next_date = selected_date + timedelta(days=1)
 
         while Appointment.objects.filter(
             doctor_id=doctor_id,
             date=next_date
-        ).count() >= 5:
+        ).count() >= MAX_APPOINTMENTS_PER_DAY:
             next_date += timedelta(days=1)
 
         return JsonResponse({
@@ -866,7 +914,7 @@ def check_day_availability(request, doctor_id, date):
     return JsonResponse({"full": False, "exist": False})
 
 
-@login_required(login_url='login_page')
+@role_required(PATIENT)
 def save_appointment(request):
     if request.method == "POST":
         dep_id = request.POST['department']
@@ -876,20 +924,34 @@ def save_appointment(request):
         desc = request.POST['desc']
 
         patient = Patient.objects.get(user=request.user)
-        dept = Department.objects.get(id=dep_id)
-        doctor = Doctor.objects.get(id=doctor_id)
-        date_parsed = parse_date(date_selected)
+        dept = get_object_or_404(Department, id=dep_id)
+        doctor = get_object_or_404(Doctor, id=doctor_id, status=1)
+        date_parsed = parse_date(date_selected) if date_selected else None
+
+        if date_parsed is None:
+            messages.error(request, "Please choose a valid date.")
+            return redirect('patient_book_appointment')
+
+        if date_parsed < date.today():
+            messages.error(request, "You can't book an appointment in the past.")
+            return redirect('patient_book_appointment')
+
+        if time_slot not in TIME_SLOTS:
+            messages.error(request, "Please choose one of the available time slots.")
+            return redirect('patient_book_appointment')
 
         appointment_count = Appointment.objects.filter(
             doctor=doctor,
             date=date_parsed
         ).count()
 
-        if appointment_count >= 5:
+        if appointment_count >= MAX_APPOINTMENTS_PER_DAY:
+            messages.error(request, "This doctor is fully booked on that date. Please choose another day.")
             return redirect('patient_book_appointment')
 
-        # if Appointment.objects.filter(doctor=doctor,date=date_parsed,patient = request.user).count() >= 1:
-        #     return redirect('patient_book_appointment')
+        if Appointment.objects.filter(doctor=doctor, date=date_parsed, patient=patient).exists():
+            messages.error(request, "You already have an appointment with this doctor on that date.")
+            return redirect('patient_book_appointment')
 
         if Appointment.objects.filter(doctor=doctor, date=date_parsed, time=time_slot).exists():
             messages.error(request, "This time slot is already booked for this doctor.")
@@ -909,17 +971,21 @@ def save_appointment(request):
         messages.success(request, "Appointment booked successfully!")
         return redirect("patient_book_appointment")
 
+@role_required(PATIENT, api=True)
 def get_booked_times(request, doctor_id, date):
+    selected_date = parse_date(date)
+    if selected_date is None:
+        return JsonResponse({"error": "Invalid date"}, status=400)
     booked_times = Appointment.objects.filter(
         doctor_id=doctor_id,
-        date=date
+        date=selected_date
     ).values_list('time', flat=True)
 
     return JsonResponse({
         "booked_times": list(booked_times)
     })
 
-@login_required(login_url='login_page')
+@role_required(PATIENT)
 def patient_appointment_history(request):
     patient = Patient.objects.get(user=request.user)
     appointments = Appointment.objects.filter(patient=patient).order_by('-date')
@@ -928,11 +994,14 @@ def patient_appointment_history(request):
     })
 
 
-@login_required(login_url='login_page')
+@role_required(PATIENT)
 def patient_edit_profile(request):
     patient = Patient.objects.get(user=request.user)
 
     if request.method == "POST":
+        if is_protected_demo_user(request.user):
+            messages.error(request, "This is a shared demo account, so it can't be changed. Try creating your own account instead.")
+            return redirect("patient_edit_profile")
         user = request.user
 
         # Update User model fields
@@ -975,14 +1044,17 @@ def patient_edit_profile(request):
     })
 
 
-@login_required(login_url='login_page')
+@role_required(PATIENT)
 def patient_reset_password(request):
     return render(request, 'patient_reset_password.html')
 
 
-@login_required(login_url='login_page')
+@role_required(PATIENT)
 def patient_reset_password_function(request):
     if request.method == 'POST':
+        if is_protected_demo_user(request.user):
+            messages.error(request, "This is a shared demo account, so it can't be changed. Try creating your own account instead.")
+            return redirect('patient_reset_password')
         current_password = request.POST['currentpass']
         pas = request.POST['newpass']
         cpas = request.POST['confirmpass']
