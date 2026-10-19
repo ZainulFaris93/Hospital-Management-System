@@ -57,7 +57,10 @@ def patient_signup_function(request):
             subject='Patient Regsitration Successful'
             message='Patient ID: '+str(p_id)+"\n"+'username: '+str(uname)+"\n"+'password: '+str(pas)+"\n"+'email: '+str(mail)
             send_mail(subject,message,settings.EMAIL_HOST_USER,{mail})
-            messages.success(request,'User registration success.Please Check Your E-mail for Login Credentials..')
+            if settings.DEMO_MODE:
+                messages.success(request,f'Registration successful. Demo mode: your login is username "{uname}", password "{pas}".')
+            else:
+                messages.success(request,'User registration success.Please Check Your E-mail for Login Credentials..')
             return redirect('login_page')
         
 def doctor_signup(request):
@@ -185,7 +188,10 @@ def approve(request, id):
 
     send_mail(subject, message, settings.EMAIL_HOST_USER, [user1.email])
 
-    messages.info(request, 'Doctor approved')
+    if settings.DEMO_MODE:
+        messages.info(request, f'Doctor approved. Demo mode: login is username "{user1.username}", password "{password}".')
+    else:
+        messages.info(request, 'Doctor approved')
     return redirect('admin_doc_approval')
 
 def disapprove(request, id):
@@ -267,7 +273,10 @@ def admin_add_doc(request):
             message = f"Username: {user.username}\nPassword: {password}\nEmail: {user.email}"
             send_mail(subject, message, settings.EMAIL_HOST_USER, [user.email])
 
-            messages.info(request, 'Doctor Added Successfully')
+            if settings.DEMO_MODE:
+                messages.info(request, f'Doctor added. Demo mode: login is username "{uname}", password "{password}".')
+            else:
+                messages.info(request, 'Doctor Added Successfully')
             return redirect('admin_add_doc')
         
     return render(request, 'admin_add_doc.html', {'dept':d})
@@ -326,7 +335,10 @@ def admin_add_patient(request):
             subject='Patient Regsitration Successful'
             message='Patient Id: '+str(p_id)+"\n"+'username: '+str(uname)+"\n"+'password: '+str(pas)+"\n"+'email: '+str(mail)
             send_mail(subject,message,settings.EMAIL_HOST_USER,{mail})
-            messages.success(request,'Patient Registration Successful..')
+            if settings.DEMO_MODE:
+                messages.success(request,f'Patient registered. Demo mode: login is username "{uname}", password "{pas}".')
+            else:
+                messages.success(request,'Patient Registration Successful..')
             return redirect('admin_add_patient')
     
     return render(request, 'admin_add_patient.html')
